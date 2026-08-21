@@ -1,0 +1,88 @@
+﻿{% extends "base.html" %}
+{% block page_title %}Agri Store{% endblock %}
+{% block content %}
+
+<!-- Welcome Banner -->
+<div class="welcome-hero">
+  <h1>&#127807; Welcome Back, Farmer!</h1>
+  <p>Premium Seeds, Pesticides &amp; Farming Medicines from Trusted Brands</p>
+</div>
+
+<!-- Search + Filters -->
+<div class="glass-panel" style="margin-bottom:1.5rem; padding:1rem 1.5rem;">
+  <form method="GET" action="/store" style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+    <input type="text" name="q" value="{{ search }}" placeholder="&#128269; Search products, brands..." class="form-control" style="flex:1; min-width:200px;">
+    <input type="hidden" name="category" id="cat-hidden" value="{{ category }}">
+    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Search</button>
+    <a href="/store" class="btn" style="background:var(--gray-light);">Clear</a>
+  </form>
+  <div class="store-filters" style="margin-top:1rem; margin-bottom:0;">
+    <button class="filter-btn {% if category == 'all' %}active{% endif %}" onclick="setFilter('all')">&#127807; All Products</button>
+    <button class="filter-btn {% if category == 'seed' %}active{% endif %}" onclick="setFilter('seed')">&#127807; Seeds</button>
+    <button class="filter-btn {% if category == 'pesticide' %}active{% endif %}" onclick="setFilter('pesticide')">&#127756; Pesticides</button>
+    <button class="filter-btn {% if category == 'medicine' %}active{% endif %}" onclick="setFilter('medicine')">&#128138; Medicines</button>
+    <button class="filter-btn {% if category == 'fertilizer' %}active{% endif %}" onclick="setFilter('fertilizer')">&#127807; Fertilizers</button>
+  </div>
+</div>
+
+<!-- Product Count -->
+<div style="margin-bottom:1rem; color:var(--gray); font-size:0.9rem; font-weight:600;">
+  Showing <strong style="color:var(--persian-green);">{{ products|length }}</strong> products
+  {% if search %} for "<strong>{{ search }}</strong>"{% endif %}
+</div>
+
+<!-- Product Grid -->
+{% if products %}
+<div class="store-grid">
+  {% for p in products %}
+  <div class="product-card">
+    <a href="/store/{{ p.id }}" style="text-decoration:none; color:inherit;">
+      <img src="{{ p.image_url }}" alt="{{ p.name }}" class="product-card-img" onerror="this.src='/static/images/logo.png'">
+    </a>
+    <div class="product-card-body">
+      <span class="cat-badge cat-{{ p.category }}">{{ p.category|upper }}</span>
+      <div class="product-brand">{{ p.brand }}</div>
+      <a href="/store/{{ p.id }}" style="text-decoration:none; color:inherit;">
+        <div class="product-name">{{ p.name }}</div>
+      </a>
+      <div class="product-unit">{{ p.unit }}</div>
+      <div class="product-rating">
+        <span class="stars">
+          {% for i in range(p.rating|int) %}&#9733;{% endfor %}{% if p.rating - p.rating|int >= 0.5 %}&#9734;{% endif %}
+        </span>
+        <span style="color:var(--gray);">{{ p.rating }} ({{ p.reviews_count }})</span>
+        {% if p.stock < 50 %}<span style="color:var(--danger); font-size:0.75rem; margin-left:auto;">Only {{ p.stock }} left!</span>{% endif %}
+      </div>
+      <div class="product-price">
+        <span class="price-current">&#8377;{{ p.price|int }}</span>
+        {% if p.original_price %}
+          <span class="price-original">&#8377;{{ p.original_price|int }}</span>
+          <span class="price-discount">{{ (((p.original_price - p.price) / p.original_price) * 100)|int }}% OFF</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="product-card-footer">
+      <button class="btn-cart" onclick="addToCart({{ p.id }})"><i class="fa fa-cart-plus"></i> Add to Cart</button>
+      <a href="/store/{{ p.id }}" class="btn-view" title="View Details"><i class="fa fa-eye"></i></a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="glass-panel" style="text-align:center; padding:3rem;">
+  <div style="font-size:3rem; margin-bottom:1rem;">&#128722;</div>
+  <h3 style="color:var(--gray);">No products found</h3>
+  <p style="color:var(--gray);">Try a different search or category</p>
+  <a href="/store" class="btn btn-primary" style="margin-top:1rem; text-decoration:none;">Show All Products</a>
+</div>
+{% endif %}
+
+{% endblock %}
+{% block scripts %}
+<script>
+function setFilter(cat) {
+  document.getElementById('cat-hidden').value = cat;
+  document.querySelector('form[action="/store"]').submit();
+}
+</script>
+{% endblock %}

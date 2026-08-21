@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+{% block page_title %}Weather & Agri Map{% endblock %}
+
+{% block content %}
+<style>
+.wm-hero {
+  background: linear-gradient(135deg, #1B4D3E 0%, #2E7D64 60%, #3aaa80 100%);
+  border-radius: 20px; padding: 1.4rem 2rem; margin-bottom: 1.25rem;
+  color: white; display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem;
+}
+.wm-hero h1 { font-family: 'Montserrat', sans-serif; font-size: 1.7rem; margin: 0; font-weight: 900; }
+.wm-hero p  { margin: 0.2rem 0 0; font-size: 0.88rem; opacity: 0.85; }
+.wm-tabs {
+  display: flex; gap: 0.5rem; margin-bottom: 1.25rem;
+  background: white; border-radius: 14px; padding: 0.35rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07); width: fit-content;
+}
+.wm-tab {
+  padding: 0.55rem 1.4rem; border-radius: 10px; border: none;
+  background: transparent; font-family: 'Inter', sans-serif;
+  font-weight: 600; font-size: 0.88rem; color: var(--gray);
+  cursor: pointer; transition: all 0.22s; display: flex; align-items: center;
+  gap: 0.4rem; white-space: nowrap;
+}
+.wm-tab:hover { color: var(--persian-green); background: var(--persian-green-bg); }
+.wm-tab.active { background: var(--persian-green); color: white; box-shadow: 0 3px 10px rgba(27,77,62,0.3); }
+.wm-panel { display: none; }
+.wm-panel.active { display: block; }
+#wx-loading-state, #wx-error-state {
+  background: white; border-radius: 18px; box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  text-align: center; padding: 3rem 2rem; margin-bottom: 1.5rem;
+}
+#wx-error-state { display: none; }
+.wx-hero-card {
+  background: linear-gradient(135deg, #1B4D3E, #2E7D64);
+  border-radius: 20px; color: white; padding: 2rem; margin-bottom: 1.25rem;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 1.5rem; box-shadow: 0 8px 32px rgba(27,77,62,0.25);
+}
+.wx-hero-left h2 { font-family: 'Montserrat', sans-serif; font-size: 4rem; font-weight: 900; margin: 0; line-height: 1; }
+.wx-hero-left .wx-cond { font-size: 1.3rem; font-weight: 600; margin: 0.3rem 0; opacity: 0.95; }
+.wx-hero-left .wx-feels { font-size: 0.9rem; opacity: 0.78; }
+.wx-hero-left .wx-loc { font-size: 0.88rem; opacity: 0.78; margin-top: 0.4rem; }
+.wx-hero-right { font-size: 6rem; line-height: 1; text-align: center; }
+.wx-hero-updated { font-size: 0.72rem; opacity: 0.6; text-align: right; margin-top: 0.6rem; }
+.wx-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.9rem; margin-bottom: 1.25rem;
+}
+.wx-stat-card {
+  background: white; border-radius: 14px; padding: 1.1rem; text-align: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid #f0f0f0;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.wx-stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+.wx-stat-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+.wx-stat-val { font-family: 'Montserrat', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--persian-green); }
+.wx-stat-lbl { font-size: 0.72rem; color: var(--gray); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.2rem; }
+.advice-grid { display: flex; flex-direction: column; gap: 0.75rem; }
+.advice-item {
+  display: flex; align-items: flex-start; gap: 1rem;
+  padding: 1rem 1.2rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.5;
+}
+.advice-item.success { background: #e8f5e9; border-left: 4px solid #4caf50; color: #1b5e20; }
+.advice-item.warning { background: #fffde7; border-left: 4px solid #ffc107; color: #7c5c00; }
+.advice-item.danger  { background: #fdecea; border-left: 4px solid #f44336; color: #b71c1c; }
+.advice-item.info    { background: #e3f2fd; border-left: 4px solid #2196f3; color: #0d47a1; }
+.advice-item-icon { font-size: 1.5rem; flex-shrink: 0; }
+.forecast-row { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 6px; }
+.fc-card {
+  flex-shrink: 0; background: white; border: 1px solid #e8f5e9;
+  border-radius: 14px; padding: 0.9rem 0.8rem; text-align: center; min-width: 88px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.fc-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.1); }
+.fc-card.today { background: linear-gradient(135deg, #1B4D3E, #2E7D64); color: white; border-color: transparent; }
+.fc-day { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.fc-ico  { font-size: 1.6rem; margin: 0.3rem 0; }
+.fc-tmp  { font-size: 0.82rem; font-weight: 700; }
+.fc-rain { font-size: 0.68rem; color: #2196f3; margin-top: 0.25rem; }
+.fc-hum  { font-size: 0.68rem; color: var(--gray); }
+.fc-card.today .fc-day, .fc-card.today .fc-tmp, .fc-card.today .fc-rain, .fc-card.today .fc-hum { color: rgba(255,255,255,0.85); }
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.map-layer-btn {
+  display: flex; align-items: center; gap: 0.35rem;
+  padding: 0.4rem 0.85rem; border-radius: 20px; border: 2px solid var(--gray-light);
+  background: white; cursor: pointer; font-size: 0.8rem; font-weight: 600; color: var(--dark);
+  transition: all 0.2s; white-space: nowrap;
+}
+.map-layer-btn:hover  { border-color: var(--persian-green); color: var(--persian-green); }
+.map-layer-btn.active { background: var(--persian-green); color: white; border-color: var(--persian-green); }
+.place-card {
+  background: white; border-radius: 10px; padding: 0.75rem 0.85rem;
+  border: 1px solid var(--gray-light); cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s; flex-shrink: 0;
+}
+.place-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.1); transform: translateY(-2px); }
+.place-name { font-weight: 700; font-size: 0.84rem; line-height: 1.3; }
+.place-dist { font-size: 0.74rem; color: var(--persian-green); font-weight: 600; margin-top: 2px; }
+.advice-pill {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 600; flex-shrink: 0;
+}
+.advice-pill.success { background: #e8f5e9; color: #1b5e20; }
+.advice-pill.warning { background: #fff8e1; color: #b45309; }
+.advice-pill.danger  { background: #fdecea; color: #b71c1c; }
+.advice-pill.info    { background: #e3f2fd; color: #0d47a1; }
+.map-fc-card { background: var(--persian-green-bg); border-radius: 10px; padding: 0.55rem 0.7rem; text-align: center; min-width: 76px; flex-shrink: 0; border: 1px solid #cde8db; }
+</style>
+
+<div class="wm-hero">
+  <div>
+    <h1>&#127793; Weather &amp; Agri Map</h1>
+    <p>Real-time weather &middot; Agri-intelligence map &middot; Farming advice &middot; Nearby mandis &amp; labs</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+    <button class="btn btn-primary" onclick="refreshWeather()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);font-size:0.82rem;padding:0.45rem 1rem;">
+      <i class="fa fa-sync-alt" id="refresh-icon"></i> Refresh
+    </button>
+    <div id="hero-wx-badge" style="display:none;background:rgba(0,0,0,0.25);border-radius:10px;padding:0.45rem 0.9rem;font-size:0.9rem;font-weight:700;">
+      <span id="hero-badge-emoji">&#127803;</span> <span id="hero-badge-temp">--&deg;C</span>
+    </div>
+  </div>
+</div>
+
+<div class="wm-tabs" role="tablist">
+  <button class="wm-tab active" id="tab-weather" role="tab" onclick="switchTab('weather')">
+    <i class="fa fa-cloud-sun"></i> Live Weather
+  </button>
+  <button class="wm-tab" id="tab-map" role="tab" onclick="switchTab('map')">
+    <i class="fa fa-map-marked-alt"></i> Agri Intelligence Map
+  </button>
+</div>
+
+<!-- WEATHER PANEL -->
+<div class="wm-panel active" id="panel-weather">
+  <div id="wx-loading-state">
+    <div style="font-size:3.5rem;animation:spin 2s linear infinite;display:inline-block;">&#127807;</div>
+    <h3 style="font-family:'Montserrat',sans-serif;margin:1rem 0 0.4rem;">Fetching Live Weather&hellip;</h3>
+    <p style="color:var(--gray);font-size:0.9rem;">Please allow location access when prompted</p>
+  </div>
+  <div id="wx-error-state">
+    <div style="font-size:3rem;">&#9888;&#65039;</div>
+    <h3 style="font-family:'Montserrat',sans-serif;color:var(--danger);margin:1rem 0 0.4rem;">Could Not Fetch Weather</h3>
+    <p id="wx-error-msg" style="color:var(--gray);font-size:0.9rem;">Location access was denied or unavailable.</p>
+    <button class="btn btn-primary" onclick="refreshWeather()" style="margin-top:1rem;"><i class="fa fa-redo"></i> Try Again</button>
+  </div>
+  <div id="wx-content" style="display:none;">
+    <div class="wx-hero-card">
+      <div class="wx-hero-left">
+        <div class="wx-loc" id="wx-loc">&#128205; Loading&hellip;</div>
+        <h2 id="wx-temp">--&deg;C</h2>
+        <div class="wx-cond" id="wx-cond">&mdash;</div>
+        <div class="wx-feels" id="wx-feels">Feels like &mdash;</div>
+        <div class="wx-hero-updated" id="wx-updated"></div>
+      </div>
+      <div class="wx-hero-right" id="wx-emoji">&#127803;</div>
+    </div>
+    <div class="wx-stats">
+      <div class="wx-stat-card"><div class="wx-stat-icon">&#128167;</div><div class="wx-stat-val" id="stat-humidity">--%</div><div class="wx-stat-lbl">Humidity</div></div>
+      <div class="wx-stat-card"><div class="wx-stat-icon">&#127788;</div><div class="wx-stat-val" id="stat-wind">-- km/h</div><div class="wx-stat-lbl">Wind Speed</div></div>
+      <div class="wx-stat-card"><div class="wx-stat-icon">&#128312;</div><div class="wx-stat-val" id="stat-pressure">-- hPa</div><div class="wx-stat-lbl">Pressure</div></div>
+      <div class="wx-stat-card"><div class="wx-stat-icon">&#128065;</div><div class="wx-stat-val" id="stat-visibility">-- km</div><div class="wx-stat-lbl">Visibility</div></div>
+      <div class="wx-stat-card"><div class="wx-stat-icon">&#127783;</div><div class="wx-stat-val" id="stat-rain">-- mm</div><div class="wx-stat-lbl">Rainfall (1h)</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+      <div class="glass-panel">
+        <h3 style="font-family:'Montserrat',sans-serif;margin-bottom:1rem;color:var(--persian-green);font-size:1rem;"><i class="fa fa-leaf"></i> Farming Advice Today</h3>
+        <div class="advice-grid" id="advice-container"></div>
+      </div>
+      <div class="glass-panel">
+        <h3 style="font-family:'Montserrat',sans-serif;margin-bottom:1rem;color:var(--persian-green);font-size:1rem;"><i class="fa fa-calendar-alt"></i> 7-Day Agri Forecast</h3>
+        <div class="forecast-row" id="forecast-container"></div>
+        <div style="margin-top:1rem;padding:0.75rem 1rem;background:var(--persian-green-bg);border-radius:10px;font-size:0.82rem;">
+          <strong style="color:var(--persian-green);">&#128161; Tip:</strong>
+          <span style="color:var(--dark);">Check rainfall forecasts before sowing, spraying, or fertilizer application.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAP PANEL -->
+<div class="wm-panel" id="panel-map">
+  <div id="map-wx-strip" class="glass-panel" style="display:none;margin-bottom:1rem;padding:0;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#1B4D3E,#2E7D64);color:white;padding:0.75rem 1.5rem;display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:0.65rem;flex:1;min-width:160px;">
+        <span id="mwx-emoji" style="font-size:2.2rem;line-height:1;">&#127803;</span>
+        <div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:1.5rem;font-weight:900;line-height:1;" id="mwx-temp">--&deg;C</div>
+          <div style="font-size:0.8rem;opacity:0.85;" id="mwx-desc">Loading&hellip;</div>
+          <div style="font-size:0.72rem;opacity:0.7;" id="mwx-loc"><i class="fa fa-map-marker-alt"></i> --</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:1.25rem;flex-wrap:wrap;">
+        <div style="text-align:center;"><div style="font-size:1rem;font-weight:700;" id="mwx-hum">--%</div><div style="font-size:0.68rem;opacity:0.75;">Humidity</div></div>
+        <div style="text-align:center;"><div style="font-size:1rem;font-weight:700;" id="mwx-wind">-- km/h</div><div style="font-size:0.68rem;opacity:0.75;">Wind</div></div>
+        <div style="text-align:center;"><div style="font-size:1rem;font-weight:700;" id="mwx-feels">--&deg;C</div><div style="font-size:0.68rem;opacity:0.75;">Feels Like</div></div>
+        <div style="text-align:center;"><div style="font-size:1rem;font-weight:700;" id="mwx-rain">-- mm</div><div style="font-size:0.68rem;opacity:0.75;">Rain(1h)</div></div>
+      </div>
+      <button onclick="switchTab('weather')" style="margin-left:auto;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:0.35rem 0.85rem;font-size:0.78rem;cursor:pointer;font-weight:600;">
+        <i class="fa fa-expand-alt"></i> Full Report
+      </button>
+    </div>
+    <div id="map-wx-advice" style="padding:0.55rem 1.5rem;background:#f0faf5;display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;border-bottom:1px solid #d4ead9;"></div>
+    <div style="padding:0.7rem 1.5rem;background:white;">
+      <div style="font-size:0.72rem;font-weight:700;color:var(--persian-green);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:0.5rem;"><i class="fa fa-calendar-alt"></i> 7-Day Forecast</div>
+      <div id="map-wx-forecast" style="display:flex;gap:0.6rem;overflow-x:auto;padding-bottom:4px;"></div>
+    </div>
+  </div>
+
+  <div id="map-loading" class="glass-panel" style="margin-bottom:1rem;padding:0.85rem 1.5rem;display:flex;align-items:center;gap:1rem;">
+    <div style="font-size:1.6rem;animation:spin 1.5s linear infinite;">&#9680;</div>
+    <span style="color:var(--gray);font-size:0.9rem;">Detecting your location &amp; loading the map&hellip;</span>
+  </div>
+
+  <div class="glass-panel" style="margin-bottom:1rem;padding:0.85rem 1.5rem;" id="map-controls">
+    <div style="display:flex;gap:0.65rem;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:0.78rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;">Map Layers:</span>
+      <button class="map-layer-btn active" id="btn-mandi" onclick="toggleLayer('mandi',this)">&#127800; Mandis</button>
+      <button class="map-layer-btn" id="btn-soil" onclick="toggleLayer('soil',this)">&#128207; Soil Labs</button>
+      <button class="map-layer-btn" id="btn-fertilizer" onclick="toggleLayer('fertilizer',this)">&#127807; Agri Shops</button>
+      <button class="map-layer-btn" id="btn-buyers" onclick="toggleLayer('buyers',this)">&#127799; Grain Buyers</button>
+      <button class="map-layer-btn" id="btn-water" onclick="toggleLayer('water',this)">&#128167; Water</button>
+      <div style="margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="startFarmDraw()" id="btn-draw" style="font-size:0.82rem;padding:0.45rem 1rem;"><i class="fa fa-draw-polygon"></i> Mark My Farm</button>
+        <button class="btn" style="background:var(--danger);color:white;font-size:0.82rem;padding:0.45rem 1rem;" onclick="clearFarm()"><i class="fa fa-trash"></i> Clear</button>
+        <button class="btn" style="background:var(--info);color:white;font-size:0.82rem;padding:0.45rem 1rem;" onclick="locateMe()"><i class="fa fa-location-arrow"></i> My Location</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 290px;gap:1rem;height:calc(100vh - 380px);min-height:480px;">
+    <div class="glass-panel" style="padding:0;overflow:hidden;position:relative;">
+      <div id="agri-map" style="width:100%;height:100%;border-radius:18px;"></div>
+      <div id="draw-hint" style="display:none;position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(27,77,62,0.93);color:white;padding:0.55rem 1.2rem;border-radius:20px;font-size:0.82rem;font-weight:600;z-index:800;pointer-events:none;white-space:nowrap;">
+        &#128205; Click to add boundary points &bull; Double-click to finish
+      </div>
+      <div id="map-wx-badge" style="display:none;position:absolute;top:12px;right:12px;background:rgba(27,77,62,0.9);backdrop-filter:blur(8px);color:white;border-radius:12px;padding:0.6rem 0.9rem;z-index:800;font-size:0.82rem;min-width:130px;cursor:pointer;" onclick="switchTab('weather')" title="Click for full weather report">
+        <div style="display:flex;align-items:center;gap:0.4rem;font-weight:700;font-size:1rem;"><span id="badge-emoji">&#127803;</span><span id="badge-temp">--&deg;C</span></div>
+        <div id="badge-desc" style="font-size:0.72rem;opacity:0.85;margin-top:2px;"></div>
+        <div id="badge-loc" style="font-size:0.68rem;opacity:0.7;margin-top:1px;"><i class="fa fa-map-marker-alt"></i> --</div>
+        <div style="font-size:0.64rem;opacity:0.55;margin-top:3px;">Tap for full report &rarr;</div>
+      </div>
+      <div style="position:absolute;bottom:16px;left:16px;background:rgba(255,255,255,0.96);border-radius:12px;padding:0.65rem 0.9rem;z-index:800;font-size:0.75rem;box-shadow:0 2px 12px rgba(0,0,0,0.13);line-height:1.7;">
+        <div style="font-weight:700;margin-bottom:0.3rem;color:var(--persian-green);font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px;">Legend</div>
+        <div>&#127800; Mandi / Market</div>
+        <div>&#128207; Soil Testing Lab</div>
+        <div>&#127807; Agri / Fertilizer Shop</div>
+        <div>&#127799; Grain / Crop Buyer</div>
+        <div>&#128167; Water Source</div>
+        <div>&#128506; Your Farm Area</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.75rem;overflow:hidden;min-height:0;">
+      <div class="glass-panel" style="padding:0.85rem 1rem;flex-shrink:0;">
+        <h4 style="font-family:'Montserrat',sans-serif;color:var(--persian-green);margin-bottom:0.3rem;font-size:0.95rem;"><i class="fa fa-list-ul"></i> Nearby Places</h4>
+        <div style="font-size:0.78rem;color:var(--gray);" id="places-count">Waiting for location&hellip;</div>
+      </div>
+      <div id="places-list" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:0.5rem;min-height:0;">
+        <div class="glass-panel" style="text-align:center;padding:1.5rem;color:var(--gray);">
+          <div style="font-size:1.8rem;">&#127758;</div>
+          <div style="margin-top:0.4rem;font-size:0.82rem;">Allow location to see nearby places</div>
+        </div>
+      </div>
+      <div class="glass-panel" style="padding:0.85rem 1rem;flex-shrink:0;" id="farm-panel">
+        <h4 style="font-family:'Montserrat',sans-serif;color:var(--persian-green);margin-bottom:0.5rem;font-size:0.9rem;"><i class="fa fa-map"></i> My Farm</h4>
+        <div id="farm-info" style="font-size:0.8rem;color:var(--gray);">No farm marked yet. Click "Mark My Farm" to draw your field boundary.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script>
+let cachedWeatherData=null,userLat=null,userLon=null,mapInitialized=false;
+let map,userMarker,drawnItems;
+let activeLayers={mandi:true,soil:false,fertilizer:false,buyers:false,water:false};
+let layerGroups={},allPlaces=[];
+const WX_EMOJI={Thunderstorm:'&#9928;&#65039;',Drizzle:'&#127746;',Rain:'&#127783;&#65039;',Snow:'&#10052;&#65039;',Clear:'&#9728;&#65039;',Clouds:'&#9925;',Mist:'&#127787;&#65039;',Fog:'&#127787;&#65039;',Haze:'&#127782;&#65039;',Smoke:'&#127743;',Dust:'&#127790;',Sand:'&#127790;',Squall:'&#128168;',Tornado:'&#127754;'};
+function wxEmoji(c){for(const k in WX_EMOJI)if(c&&c.includes(k))return WX_EMOJI[k];return '&#9729;&#65039;';}
+function dayLabel(s){const d=new Date(s+'T12:00:00'),t=new Date();t.setHours(12,0,0,0);const f=Math.round((d-t)/86400000);if(f===0)return'Today';if(f===1)return'Tomorrow';return['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];}
+function fmtTime(){return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});}
+function switchTab(tab){
+  document.querySelectorAll('.wm-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.wm-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if(tab==='map'&&!mapInitialized){initMap(userLat||20.5937,userLon||78.9629);if(!cachedWeatherData)fetchWeatherForCoords(userLat||20.5937,userLon||78.9629);}
+  if(tab==='map'&&map)setTimeout(()=>map.invalidateSize(),100);
+}
+async function refreshWeather(){const ic=document.getElementById('refresh-icon');ic.classList.add('fa-spin');await loadWeather();setTimeout(()=>ic.classList.remove('fa-spin'),1200);}
+function showWxLoading(){document.getElementById('wx-loading-state').style.display='block';document.getElementById('wx-error-state').style.display='none';document.getElementById('wx-content').style.display='none';}
+function showWxError(m){document.getElementById('wx-loading-state').style.display='none';document.getElementById('wx-error-state').style.display='block';document.getElementById('wx-content').style.display='none';document.getElementById('wx-error-msg').textContent=m;}
+function showWxContent(){document.getElementById('wx-loading-state').style.display='none';document.getElementById('wx-error-state').style.display='none';document.getElementById('wx-content').style.display='block';}
+async function fetchWeatherForCoords(lat,lon){
+  try{
+    const r=await fetch('/api/weather?lat='+lat.toFixed(4)+'&lon='+lon.toFixed(4));
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    cachedWeatherData=d;renderWeather(d);populateMapWeather(d);
+  }catch(e){showWxError('Could not fetch weather: '+e.message);}
+}
+async function loadWeather(){
+  showWxLoading();
+  if(!navigator.geolocation){showWxError('Geolocation not supported.');return;}
+  navigator.geolocation.getCurrentPosition(
+    async pos=>{userLat=pos.coords.latitude;userLon=pos.coords.longitude;await fetchWeatherForCoords(userLat,userLon);},
+    ()=>{userLat=20.5937;userLon=78.9629;fetchWeatherForCoords(userLat,userLon);},
+    {enableHighAccuracy:true,timeout:10000}
+  );
+}
+function renderWeather(data){
+  showWxContent();
+  const e=wxEmoji(data.condition);
+  document.getElementById('wx-loc').innerHTML='&#128205; '+data.city;
+  document.getElementById('wx-temp').innerHTML=data.temp+'&deg;C';
+  document.getElementById('wx-cond').textContent=data.condition;
+  document.getElementById('wx-feels').textContent='Feels like '+data.feels_like+'\u00b0C';
+  document.getElementById('wx-updated').textContent='Updated: '+fmtTime();
+  document.getElementById('wx-emoji').innerHTML=e;
+  document.getElementById('hero-wx-badge').style.display='flex';
+  document.getElementById('hero-badge-emoji').innerHTML=e;
+  document.getElementById('hero-badge-temp').textContent=data.temp+'\u00b0C';
+  document.getElementById('stat-humidity').textContent=data.humidity+'%';
+  document.getElementById('stat-wind').textContent=data.wind_speed+' km/h';
+  document.getElementById('stat-pressure').textContent=data.pressure+' hPa';
+  document.getElementById('stat-visibility').textContent=data.visibility+' km';
+  document.getElementById('stat-rain').textContent=(data.rain_1h||0)+' mm';
+  if(data.advice&&data.advice.length)document.getElementById('advice-container').innerHTML=data.advice.map(a=>`<div class="advice-item ${a.type}"><span class="advice-item-icon">${a.icon}</span><span><strong>${a.type.charAt(0).toUpperCase()+a.type.slice(1)}:</strong> ${a.text}</span></div>`).join('');
+  if(data.forecast&&data.forecast.length){const ts=new Date().toISOString().split('T')[0];document.getElementById('forecast-container').innerHTML=data.forecast.map(f=>`<div class="fc-card ${f.date===ts?'today':''}"><div class="fc-day">${dayLabel(f.date)}</div><div class="fc-ico">${wxEmoji(f.condition)}</div><div class="fc-tmp">${f.min_temp}\u00b0/${f.max_temp}\u00b0</div>${f.rain_mm>0?`<div class="fc-rain">&#127783; ${f.rain_mm}mm</div>`:''}<div class="fc-hum">&#128167; ${f.avg_humidity}%</div></div>`).join('');}
+}
+function populateMapWeather(data){
+  const e=wxEmoji(data.condition);
+  document.getElementById('map-wx-strip').style.display='block';
+  document.getElementById('mwx-emoji').innerHTML=e;
+  document.getElementById('mwx-temp').textContent=data.temp+'\u00b0C';
+  document.getElementById('mwx-desc').textContent=data.condition;
+  document.getElementById('mwx-loc').innerHTML='<i class="fa fa-map-marker-alt"></i> '+data.city;
+  document.getElementById('mwx-hum').textContent=data.humidity+'%';
+  document.getElementById('mwx-wind').textContent=data.wind_speed+' km/h';
+  document.getElementById('mwx-feels').textContent=data.feels_like+'\u00b0C';
+  document.getElementById('mwx-rain').textContent=(data.rain_1h||0)+' mm';
+  if(data.advice&&data.advice.length)document.getElementById('map-wx-advice').innerHTML=data.advice.map(a=>`<div class="advice-pill ${a.type}">${a.icon} ${a.text.substring(0,55)}${a.text.length>55?'\u2026':''}</div>`).join('');
+  else document.getElementById('map-wx-advice').style.display='none';
+  if(data.forecast&&data.forecast.length)document.getElementById('map-wx-forecast').innerHTML=data.forecast.map(f=>`<div class="map-fc-card"><div class="fc-day">${dayLabel(f.date)}</div><div class="fc-ico">${wxEmoji(f.condition)}</div><div class="fc-tmp">${f.min_temp}\u00b0/${f.max_temp}\u00b0</div>${f.rain_mm>0?`<div class="fc-rain">&#127783;${f.rain_mm}mm</div>`:''}<div class="fc-hum">&#128167;${f.avg_humidity}%</div></div>`).join('');
+  document.getElementById('map-wx-badge').style.display='block';
+  document.getElementById('badge-emoji').textContent=e;
+  document.getElementById('badge-temp').textContent=data.temp+'\u00b0C';
+  document.getElementById('badge-desc').textContent=data.condition;
+  document.getElementById('badge-loc').innerHTML='<i class="fa fa-map-marker-alt"></i> '+data.city;
+}
+const ICONS={mandi:{emoji:'&#127800;',color:'#E91E63',label:'Mandi'},soil:{emoji:'&#128207;',color:'#9C27B0',label:'Soil Lab'},fertilizer:{emoji:'&#127807;',color:'#4CAF50',label:'Agri Shop'},buyers:{emoji:'&#127799;',color:'#FF9800',label:'Grain Buyer'},water:{emoji:'&#128167;',color:'#2196F3',label:'Water Source'}};
+function mkIcon(emoji,color){return L.divIcon({html:`<div style="background:${color};color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;box-shadow:0 2px 8px rgba(0,0,0,0.28);border:2px solid white;">${emoji}</div>`,iconSize:[36,36],iconAnchor:[18,18],popupAnchor:[0,-20],className:''}); }
+function initMap(lat,lon){
+  if(mapInitialized)return; mapInitialized=true;
+  document.getElementById('map-loading').style.display='none';
+  map=L.map('agri-map',{zoomControl:true}).setView([lat,lon],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap',maxZoom:19}).addTo(map);
+  const uIcon=L.divIcon({html:`<div style="background:var(--persian-green);color:white;border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:0 3px 14px rgba(27,77,62,0.5);border:3px solid white;">&#128109;</div>`,iconSize:[42,42],iconAnchor:[21,21],popupAnchor:[0,-24],className:''});
+  userMarker=L.marker([lat,lon],{icon:uIcon}).addTo(map).bindPopup('<b>&#128205; You are here</b><br>Your current location').openPopup();
+  L.circle([lat,lon],{radius:200,color:'#1B4D3E',fillColor:'#1B4D3E',fillOpacity:0.07,weight:1}).addTo(map);
+  for(const k in ICONS){layerGroups[k]=L.layerGroup().addTo(map);if(!activeLayers[k])layerGroups[k].remove();}
+  drawnItems=new L.FeatureGroup().addTo(map);
+  const dc=new L.Control.Draw({draw:{polygon:{allowIntersection:false,showArea:true,metric:true,shapeOptions:{color:'#1B4D3E',fillColor:'#27AE60',fillOpacity:0.22,weight:3}},rectangle:{shapeOptions:{color:'#1B4D3E',fillColor:'#27AE60',fillOpacity:0.22,weight:3}},polyline:false,circle:false,circlemarker:false,marker:false},edit:{featureGroup:drawnItems}});
+  map.addControl(dc);
+  map.on(L.Draw.Event.CREATED,e=>{drawnItems.clearLayers();drawnItems.addLayer(e.layer);document.getElementById('draw-hint').style.display='none';document.getElementById('btn-draw').innerHTML='<i class="fa fa-check-circle"></i> Farm Marked!';document.getElementById('btn-draw').style.background='var(--success)';const lls=e.layer.getLatLngs?e.layer.getLatLngs()[0]:[];const aM2=L.GeometryUtil?L.GeometryUtil.geodesicArea(lls):0;document.getElementById('farm-info').innerHTML=`<table style="width:100%;font-size:0.8rem;"><tr><td style="color:var(--gray);padding:0.25rem 0;">Area (Acres)</td><td style="font-weight:700;color:var(--persian-green);">${(aM2/4047).toFixed(2)} ac</td></tr><tr><td style="color:var(--gray);padding:0.25rem 0;">Area (Hectares)</td><td style="font-weight:700;">${(aM2/10000).toFixed(2)} ha</td></tr><tr><td colspan="2" style="padding-top:0.4rem;"><button class="btn btn-primary" style="width:100%;font-size:0.78rem;padding:0.4rem;" onclick="saveFarm()"><i class="fa fa-save"></i> Save Farm</button></td></tr></table>`;});
+  try{const s=localStorage.getItem('agridrishti_farm');if(s)L.geoJSON(JSON.parse(s),{style:{color:'#1B4D3E',fillColor:'#27AE60',fillOpacity:0.22,weight:3}}).addTo(drawnItems);}catch(_){}
+  fetchNearbyPlaces(lat,lon);
+  setTimeout(()=>map.invalidateSize(),300);
+}
+const OVERPASS='https://overpass-api.de/api/interpreter';
+const QUERIES={mandi:(a,o,r)=>`[out:json][timeout:25];(node["amenity"="marketplace"](around:${r},${a},${o});node["shop"="farm"](around:${r},${a},${o});node["name"~"mandi|market|APMC|apmc|kisaan",i](around:${r},${a},${o});way["amenity"="marketplace"](around:${r},${a},${o}););out center;`,soil:(a,o,r)=>`[out:json][timeout:25];(node["amenity"~"laboratory|testing"](around:${r},${a},${o});node["office"~"agricultural|soil"](around:${r},${a},${o});node["name"~"soil|krishi|agri|agriculture|testing",i](around:${r},${a},${o}););out center;`,fertilizer:(a,o,r)=>`[out:json][timeout:25];(node["shop"~"agrarian|farm|garden_centre"](around:${r},${a},${o});node["name"~"fertilizer|krishi|agri|seed|pesticide",i](around:${r},${a},${o}););out center;`,buyers:(a,o,r)=>`[out:json][timeout:25];(node["building"~"warehouse|storage"](around:${r},${a},${o});node["name"~"grain|trader|dal|rice|wheat|cotton|wholesale|mandal",i](around:${r},${a},${o}););out center;`,water:(a,o,r)=>`[out:json][timeout:25];(node["natural"="water"](around:${r},${a},${o});node["amenity"="water_point"](around:${r},${a},${o});way["waterway"~"river|canal"](around:${r},${a},${o}););out center;`};
+function haversine(a1,o1,a2,o2){const R=6371,dA=(a2-a1)*Math.PI/180,dO=(o2-o1)*Math.PI/180;const a=Math.sin(dA/2)**2+Math.cos(a1*Math.PI/180)*Math.cos(a2*Math.PI/180)*Math.sin(dO/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+function genFallback(type,lat,lon){const N={mandi:['APMC Market Yard','Kisaan Mandi','Agricultural Produce Market'],soil:['Krishi Vigyan Kendra','Soil Testing Lab','District Agriculture Office'],fertilizer:['Jai Kisan Agro Centre','National Seeds Corporation','Green Field Agro'],buyers:['Cooperative Society','Local Grain Trader','Kisaan Bazaar'],water:['Canal Irrigation Point','Tube Well','Pond / Water Body']};return(N[type]||[]).slice(0,3).map((name,i)=>({type,lat:lat+(Math.random()-.5)*.07,lon:lon+(Math.random()-.5)*.07,name,tags:{},dist:0.5+i*1.8+Math.random()}));}
+async function fetchLayer(type,lat,lon){try{const q=QUERIES[type](lat,lon,10000);const r=await fetch(OVERPASS+'?data='+encodeURIComponent(q));const d=await r.json();const res=(d.elements||[]).map(el=>{const la=el.lat||el.center?.lat,lo=el.lon||el.center?.lon;if(!la||!lo)return null;const name=el.tags?.name||el.tags?.['name:en']||el.tags?.['name:hi']||ICONS[type].label;return{type,lat:la,lon:lo,name,tags:el.tags||{},dist:haversine(lat,lon,la,lo)};}).filter(Boolean).sort((a,b)=>a.dist-b.dist);return res.length?res:genFallback(type,lat,lon);}catch(_){return genFallback(type,lat,lon);}}
+function buildPopup(p){const info=ICONS[p.type],dist=p.dist<1?`${(p.dist*1000).toFixed(0)} m`:`${p.dist.toFixed(1)} km`,addr=[p.tags['addr:street'],p.tags['addr:city']].filter(Boolean).join(', '),ph=p.tags.phone||p.tags['contact:phone']||'',hrs=p.tags.opening_hours||'';return `<div style="font-family:'Inter',sans-serif;min-width:200px;"><div style="background:${info.color};color:white;padding:0.5rem 0.75rem;margin:-14px -20px 0.75rem;border-radius:8px 8px 0 0;font-weight:700;font-size:0.88rem;">${info.emoji} ${info.label}</div><div style="font-weight:700;font-size:0.95rem;margin-bottom:0.3rem;">${p.name}</div>${addr?`<div style="font-size:0.78rem;color:#666;margin-bottom:0.2rem;">&#128205; ${addr}</div>`:''}<div style="font-size:0.78rem;color:#1B4D3E;font-weight:600;margin-bottom:0.2rem;">&#128207; ${dist} away</div>${ph?`<div style="font-size:0.78rem;color:#555;">&#128222; ${ph}</div>`:''}${hrs?`<div style="font-size:0.72rem;color:#888;margin-top:0.2rem;">&#128336; ${hrs}</div>`:''}<button onclick="getDir(${p.lat},${p.lon})" style="margin-top:0.5rem;width:100%;background:#1B4D3E;color:white;border:none;padding:0.38rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-weight:600;">&#128663; Get Directions</button></div>`;}
+async function fetchNearbyPlaces(lat,lon){document.getElementById('places-count').textContent='Searching nearby places\u2026';document.getElementById('places-list').innerHTML='<div class="glass-panel" style="text-align:center;padding:1.5rem;color:var(--gray);"><i class="fa fa-spinner fa-spin" style="font-size:1.4rem;"></i><div style="margin-top:0.4rem;font-size:0.82rem;">Fetching real-time data\u2026</div></div>';allPlaces=[];for(const type of Object.keys(ICONS)){const places=await fetchLayer(type,lat,lon);places.forEach(p=>{allPlaces.push(p);const m=L.marker([p.lat,p.lon],{icon:mkIcon(ICONS[p.type].emoji,ICONS[p.type].color)}).bindPopup(buildPopup(p),{maxWidth:260});layerGroups[type].addLayer(m);if(!activeLayers[type])layerGroups[type].remove();});}renderList();}
+function renderList(){const vis=allPlaces.filter(p=>activeLayers[p.type]).sort((a,b)=>a.dist-b.dist);document.getElementById('places-count').textContent=vis.length+' places found nearby';if(!vis.length){document.getElementById('places-list').innerHTML='<div class="glass-panel" style="text-align:center;padding:1.5rem;color:var(--gray);">No places found. Toggle layers above.</div>';return;}document.getElementById('places-list').innerHTML=vis.slice(0,25).map(p=>{const info=ICONS[p.type],dist=p.dist<1?`${(p.dist*1000).toFixed(0)} m`:`${p.dist.toFixed(1)} km`;return`<div class="place-card" onclick="flyTo(${p.lat},${p.lon})"><div style="display:inline-block;font-size:0.68rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:20px;background:${info.color}22;color:${info.color};margin-bottom:0.25rem;">${info.emoji} ${info.label}</div><div class="place-name">${p.name}</div><div class="place-dist">&#128205; ${dist} away</div><div style="margin-top:0.4rem;display:flex;gap:0.35rem;"><button onclick="event.stopPropagation();flyTo(${p.lat},${p.lon})" style="flex:1;background:var(--persian-green-bg);color:var(--persian-green);border:none;border-radius:6px;padding:0.28rem;font-size:0.72rem;font-weight:600;cursor:pointer;">&#128269; View</button><button onclick="event.stopPropagation();getDir(${p.lat},${p.lon})" style="flex:1;background:var(--persian-green);color:white;border:none;border-radius:6px;padding:0.28rem;font-size:0.72rem;font-weight:600;cursor:pointer;">&#128663; Directions</button></div></div>`;}).join('');}
+function flyTo(lat,lon){map.flyTo([lat,lon],16,{duration:1.4});setTimeout(()=>{for(const k in layerGroups)layerGroups[k].eachLayer(l=>{if(l.getLatLng){const ll=l.getLatLng();if(Math.abs(ll.lat-lat)<.0002&&Math.abs(ll.lng-lon)<.0002)l.openPopup();}});},1500);}
+function getDir(lat,lon){window.open('https://www.google.com/maps/dir/?api=1&destination='+lat+','+lon,'_blank');}
+function toggleLayer(type,btn){activeLayers[type]=!activeLayers[type];btn.classList.toggle('active');activeLayers[type]?layerGroups[type].addTo(map):layerGroups[type].remove();renderList();}
+function startFarmDraw(){new L.Draw.Polygon(map,{allowIntersection:false,showArea:true,shapeOptions:{color:'#1B4D3E',fillColor:'#27AE60',fillOpacity:0.22,weight:3}}).enable();document.getElementById('draw-hint').style.display='block';document.getElementById('btn-draw').innerHTML='<i class="fa fa-pencil"></i> Drawing\u2026';document.getElementById('btn-draw').style.background='var(--warning)';document.getElementById('btn-draw').style.color='white';}
+function clearFarm(){drawnItems.clearLayers();document.getElementById('btn-draw').innerHTML='<i class="fa fa-draw-polygon"></i> Mark My Farm';document.getElementById('btn-draw').style.background='var(--persian-green)';document.getElementById('btn-draw').style.color='white';document.getElementById('farm-info').textContent='No farm marked yet. Click "Mark My Farm" to draw your field boundary.';}
+function saveFarm(){localStorage.setItem('agridrishti_farm',JSON.stringify(drawnItems.toGeoJSON()));alert('Farm area saved! \u2705');}
+function locateMe(){if(userLat&&userLon){map.flyTo([userLat,userLon],14,{duration:1.4});userMarker?.openPopup();}}
+document.addEventListener('DOMContentLoaded',()=>{loadWeather();});
+</script>
+{% endblock %}

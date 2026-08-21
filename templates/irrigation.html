@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block page_title %}Advanced Smart Irrigation{% endblock %}
+
+{% block content %}
+<style>
+    .irrigation-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+        .irrigation-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .metric-card {
+        background: var(--white);
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border: 1px solid var(--gray-light);
+    }
+    .metric-icon {
+        font-size: 2.5rem;
+        color: var(--persian-green);
+        background: var(--persian-green-bg);
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    .metric-data h4 {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--gray);
+    }
+    .metric-data .value {
+        margin: 0.25rem 0 0;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--dark);
+    }
+    .zone-card {
+        background: var(--white);
+        border: 1px solid var(--gray-light);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .zone-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .zone-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--persian-green);
+    }
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .status-active { background: #e8f5e9; color: #2e7d32; }
+    .status-inactive { background: #eeeeee; color: #616161; }
+    
+    .moisture-bar-bg {
+        height: 10px;
+        background: #e0e0e0;
+        border-radius: 5px;
+        margin-top: 0.5rem;
+        overflow: hidden;
+    }
+    .moisture-bar-fill {
+        height: 100%;
+        background: var(--persian-green);
+        border-radius: 5px;
+        transition: width 0.5s ease;
+    }
+    
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    .switch input { 
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: var(--persian-green);
+    }
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+</style>
+
+<div class="irrigation-grid">
+    <!-- Left Column: Zones and Charts -->
+    <div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="metric-card">
+                <div class="metric-icon"><i class="fa fa-tint"></i></div>
+                <div class="metric-data">
+                    <h4>Water Saved Today</h4>
+                    <p class="value" style="color: var(--persian-green);">1,240 L</p>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon" style="background: #e3f2fd; color: #1976d2;"><i class="fa fa-cloud-rain"></i></div>
+                <div class="metric-data">
+                    <h4>Next Predicted Rain</h4>
+                    <p class="value" style="font-size: 1.2rem; margin-top: 0.5rem;">In 2 Days</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel" style="margin-bottom: 1.5rem;">
+            <h3 style="color: var(--persian-green); margin-bottom: 1rem;"><i class="fa fa-chart-line"></i> Soil Moisture Trend</h3>
+            <canvas id="moistureChart" height="100"></canvas>
+        </div>
+
+        <h3 style="color: var(--dark); margin-bottom: 1rem;">Field Zones</h3>
+        
+        <!-- Zone A -->
+        <div class="zone-card">
+            <div class="zone-header">
+                <div class="zone-title">Zone A: Tomato Field</div>
+                <div class="status-badge status-active" id="zoneA-status">Actively Irrigating</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <span style="font-size: 2rem; font-weight: 700;">42%</span>
+                    <span style="color: var(--gray); font-size: 0.9rem;">Current Moisture</span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.9rem; font-weight: 600;">Target: 60%</div>
+                    <div style="font-size: 0.8rem; color: var(--gray);">Pump Flow: 15 L/min</div>
+                </div>
+            </div>
+            <div class="moisture-bar-bg">
+                <div class="moisture-bar-fill" style="width: 42%;" id="zoneA-bar"></div>
+            </div>
+        </div>
+        
+        <!-- Zone B -->
+        <div class="zone-card">
+            <div class="zone-header">
+                <div class="zone-title">Zone B: Wheat Field</div>
+                <div class="status-badge status-inactive" id="zoneB-status">Standby</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <span style="font-size: 2rem; font-weight: 700;">68%</span>
+                    <span style="color: var(--gray); font-size: 0.9rem;">Current Moisture</span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.9rem; font-weight: 600;">Target: 55%</div>
+                    <div style="font-size: 0.8rem; color: var(--gray);">Pump Flow: 0 L/min</div>
+                </div>
+            </div>
+            <div class="moisture-bar-bg">
+                <div class="moisture-bar-fill" style="width: 68%; background: var(--warning);" id="zoneB-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Controls -->
+    <div>
+        <div class="glass-panel" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--persian-green), var(--persian-green-light)); color: white;">
+            <h3 style="margin-bottom: 1rem; color: white;"><i class="fa fa-microchip"></i> AI Control Engine</h3>
+            
+            <div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 600; font-size: 1.1rem;">Smart Auto Mode</span>
+                    <label class="switch">
+                        <input type="checkbox" id="auto-mode-toggle" checked onchange="toggleAutoMode()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p style="font-size: 0.85rem; opacity: 0.9; margin: 0;">AI adjusts irrigation based on live weather data, soil sensors, and crop stage.</p>
+            </div>
+            
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.85rem; opacity: 0.95;">
+                <i class="fa fa-info-circle" style="margin-top: 3px;"></i>
+                <div>
+                    <strong>AI Insight:</strong> Zone B irrigation is suspended because moderate rainfall is predicted in 48 hours. Saving ~800L of water.
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel" id="manual-controls" style="opacity: 0.5; pointer-events: none; transition: opacity 0.3s;">
+            <h3 style="color: var(--persian-green); margin-bottom: 1.5rem;"><i class="fa fa-sliders-h"></i> Manual Override</h3>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 600;">Zone A Pump</span>
+                    <label class="switch">
+                        <input type="checkbox" id="manual-zoneA" checked onchange="updateManual('A')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid var(--gray-light); margin: 1.5rem 0;">
+            
+            <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 600;">Zone B Pump</span>
+                    <label class="switch">
+                        <input type="checkbox" id="manual-zoneB" onchange="updateManual('B')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize Chart
+    const ctx = document.getElementById('moistureChart').getContext('2d');
+    const moistureChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', 'Now'],
+            datasets: [
+                {
+                    label: 'Zone A (Tomato)',
+                    data: [35, 33, 30, 28, 45, 43, 42],
+                    borderColor: '#1B4D3E',
+                    backgroundColor: 'rgba(27, 77, 62, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Zone B (Wheat)',
+                    data: [75, 72, 70, 68, 65, 68, 68],
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'transparent',
+                    borderDash: [5, 5],
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            scales: {
+                y: { min: 0, max: 100, ticks: { callback: function(val){return val + '%';} } }
+            }
+        }
+    });
+
+    function toggleAutoMode() {
+        const isAuto = document.getElementById('auto-mode-toggle').checked;
+        const manualControls = document.getElementById('manual-controls');
+        
+        if (!isAuto) {
+            manualControls.style.opacity = '1';
+            manualControls.style.pointerEvents = 'auto';
+        } else {
+            manualControls.style.opacity = '0.5';
+            manualControls.style.pointerEvents = 'none';
+            // Reset to AI state
+            document.getElementById('manual-zoneA').checked = true;
+            document.getElementById('manual-zoneB').checked = false;
+            updateManual('A', true);
+            updateManual('B', false);
+        }
+    }
+    
+    function updateManual(zone, forceState = null) {
+        let isChecked;
+        if (forceState !== null) {
+            isChecked = forceState;
+        } else {
+            isChecked = document.getElementById('manual-zone' + zone).checked;
+        }
+        
+        const statusBadge = document.getElementById(`zone${zone}-status`);
+        const barFill = document.getElementById(`zone${zone}-bar`);
+        
+        if (isChecked) {
+            statusBadge.className = 'status-badge status-active';
+            statusBadge.textContent = 'Actively Irrigating';
+            barFill.style.background = 'var(--persian-green)';
+        } else {
+            statusBadge.className = 'status-badge status-inactive';
+            statusBadge.textContent = 'Standby';
+            barFill.style.background = 'var(--warning)';
+        }
+    }
+</script>
+{% endblock %}

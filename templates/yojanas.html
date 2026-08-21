@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block page_title %}PM Kisan Yojanas{% endblock %}
+
+{% block content %}
+<style>
+    .yojana-hero {
+        background: linear-gradient(135deg, #1B4D3E, #2E7D64);
+        border-radius: 16px;
+        color: white;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .yojana-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    .yojana-card {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--gray-light);
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+    .yojana-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .yojana-icon {
+        font-size: 2.5rem;
+        color: var(--persian-green);
+        margin-bottom: 1rem;
+    }
+    .yojana-title {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+    }
+    .yojana-desc {
+        color: var(--gray);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+        flex-grow: 1;
+    }
+    .yojana-deadline {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--warning);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .yojana-deadline.urgent {
+        color: var(--danger);
+    }
+    .yojana-apply-btn {
+        background: var(--persian-green-bg);
+        color: var(--persian-green);
+        border: 1px solid var(--persian-green);
+        text-align: center;
+        padding: 0.6rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .yojana-apply-btn:hover {
+        background: var(--persian-green);
+        color: white;
+    }
+</style>
+
+<div class="yojana-hero">
+    <div>
+        <h1 style="font-family: 'Montserrat', sans-serif; font-size: 2rem; margin: 0 0 0.5rem 0;">Govt. Schemes & Yojanas</h1>
+        <p style="margin: 0; opacity: 0.9;">Discover and apply for central and state government agricultural initiatives.</p>
+    </div>
+    <div style="font-size: 3rem;">&#127979;</div>
+</div>
+
+<h2 style="font-family: 'Montserrat', sans-serif; margin-bottom: 1.5rem; color: var(--dark);">Active Schemes</h2>
+
+<div class="yojana-grid">
+    <!-- Scheme 1 -->
+    <div class="yojana-card">
+        <div class="yojana-icon"><i class="fa fa-hand-holding-usd"></i></div>
+        <div class="yojana-title">PM-Kisan Samman Nidhi</div>
+        <div class="yojana-desc">Direct income support of ₹6,000 per year provided to all landholding farmer families across the country in three equal installments.</div>
+        <div class="yojana-deadline urgent">
+            <i class="fa fa-clock"></i> e-KYC Deadline: 31st Aug 2026
+        </div>
+        <a href="#" class="yojana-apply-btn" onclick="alert('Redirecting to PM-Kisan Portal...')">Apply / Check Status</a>
+    </div>
+
+    <!-- Scheme 2 -->
+    <div class="yojana-card">
+        <div class="yojana-icon"><i class="fa fa-umbrella"></i></div>
+        <div class="yojana-title">PM Fasal Bima Yojana (PMFBY)</div>
+        <div class="yojana-desc">Comprehensive crop insurance scheme from pre-sowing to post-harvest losses against natural non-preventable risks.</div>
+        <div class="yojana-deadline">
+            <i class="fa fa-clock"></i> Rabi Registration Opens: 1st Oct
+        </div>
+        <a href="#" class="yojana-apply-btn" onclick="alert('Redirecting to PMFBY Portal...')">Apply for Insurance</a>
+    </div>
+
+    <!-- Scheme 3 -->
+    <div class="yojana-card">
+        <div class="yojana-icon"><i class="fa fa-leaf"></i></div>
+        <div class="yojana-title">Paramparagat Krishi Vikas Yojana</div>
+        <div class="yojana-desc">Promotes organic farming through a cluster approach and Participatory Guarantee System (PGS) certification.</div>
+        <div class="yojana-deadline">
+            <i class="fa fa-info-circle"></i> Open year-round
+        </div>
+        <a href="#" class="yojana-apply-btn" onclick="alert('Redirecting to PKVY Portal...')">Learn More</a>
+    </div>
+
+    <!-- Scheme 4 -->
+    <div class="yojana-card">
+        <div class="yojana-icon"><i class="fa fa-tint"></i></div>
+        <div class="yojana-title">PM Krishi Sinchayee Yojana</div>
+        <div class="yojana-desc">Enhances physical access of water on the farm and expands cultivable area under assured irrigation ("Per Drop More Crop").</div>
+        <div class="yojana-deadline">
+            <i class="fa fa-info-circle"></i> Subsidies available for Drip Irrigation
+        </div>
+        <a href="#" class="yojana-apply-btn" onclick="alert('Redirecting to PMKSY Portal...')">Apply for Subsidy</a>
+    </div>
+    
+    <!-- Scheme 5 -->
+    <div class="yojana-card">
+        <div class="yojana-icon"><i class="fa fa-tractor"></i></div>
+        <div class="yojana-title">Sub-Mission on Agricultural Mechanization</div>
+        <div class="yojana-desc">Provides financial assistance for purchasing agricultural machinery and equipment like tractors and harvesters.</div>
+        <div class="yojana-deadline">
+            <i class="fa fa-clock"></i> Next Subsidy Batch: Nov 2026
+        </div>
+        <a href="#" class="yojana-apply-btn" onclick="alert('Redirecting to SMAM Portal...')">Check Eligibility</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block page_title %}Farmer Profile{% endblock %}
+
+{% block content %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #1B4D3E, #2E7D64);
+        border-radius: 16px;
+        color: white;
+        padding: 2.5rem 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .profile-header::after {
+        content: '\f06c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: -20px;
+        bottom: -40px;
+        font-size: 15rem;
+        opacity: 0.05;
+        transform: rotate(-15deg);
+    }
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: white;
+        color: var(--persian-green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        font-weight: bold;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        border: 4px solid rgba(255,255,255,0.2);
+    }
+    .profile-info h2 {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 2rem;
+        margin: 0 0 0.25rem 0;
+    }
+    .profile-info p {
+        margin: 0;
+        opacity: 0.85;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 1.5rem;
+    }
+    @media (max-width: 900px) {
+        .profile-grid { grid-template-columns: 1fr; }
+    }
+    .info-group {
+        margin-bottom: 1.5rem;
+    }
+    .info-label {
+        font-size: 0.85rem;
+        color: var(--gray);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+    }
+    .info-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--dark);
+    }
+    .device-card {
+        background: #f8fbfa;
+        border: 1px solid #e2f0e9;
+        border-radius: 10px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .device-icon {
+        font-size: 1.8rem;
+        color: var(--persian-green);
+        background: white;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .status-online { background: #28a745; box-shadow: 0 0 8px rgba(40,167,69,0.5); }
+    .status-offline { background: #dc3545; }
+    .log-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--gray-light);
+    }
+    .log-item:last-child { border-bottom: none; }
+    .log-time {
+        font-size: 0.85rem;
+        color: var(--gray);
+        white-space: nowrap;
+        width: 80px;
+    }
+</style>
+
+<div class="profile-header">
+    <div class="profile-avatar">
+        D
+    </div>
+    <div class="profile-info">
+        <h2>Demo Farmer</h2>
+        <p><i class="fa fa-map-marker-alt"></i> Ludhiana, Punjab, India</p>
+        <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+            <span style="background: rgba(255,255,255,0.2); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; backdrop-filter: blur(5px);">
+                <i class="fa fa-id-card"></i> Kissan ID: 9823-4412-10
+            </span>
+            <span style="background: rgba(255,255,255,0.2); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; backdrop-filter: blur(5px);">
+                <i class="fa fa-star"></i> Premium Member
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="profile-grid">
+    <!-- Left Column -->
+    <div>
+        <div class="glass-panel" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="color: var(--persian-green); margin: 0;"><i class="fa fa-user"></i> Personal Info</h3>
+                <button class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;"><i class="fa fa-edit"></i> Edit</button>
+            </div>
+            
+            <div class="info-group">
+                <div class="info-label">Phone Number</div>
+                <div class="info-value">+91 98765 43210</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Email Address</div>
+                <div class="info-value">demo@agridrishti.com</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Preferred Language</div>
+                <div class="info-value">Punjabi / English</div>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <h3 style="color: var(--persian-green); margin-bottom: 1.5rem;"><i class="fa fa-wifi"></i> Connected IoT Devices</h3>
+            
+            <div class="device-card">
+                <div class="device-icon"><i class="fa fa-microchip"></i></div>
+                <div style="flex-grow: 1;">
+                    <div style="font-weight: 700; color: var(--dark);">Smart Soil Sensor A1</div>
+                    <div style="font-size: 0.8rem; color: var(--gray);">Zone A (Tomato Field)</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="status-dot status-online"></div>
+                    <div style="font-size: 0.75rem; font-weight: 600; color: #28a745; margin-top: 0.2rem;">Online</div>
+                </div>
+            </div>
+            
+            <div class="device-card">
+                <div class="device-icon"><i class="fa fa-tint"></i></div>
+                <div style="flex-grow: 1;">
+                    <div style="font-weight: 700; color: var(--dark);">Auto Pump Controller</div>
+                    <div style="font-size: 0.8rem; color: var(--gray);">Main Water Line</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="status-dot status-online"></div>
+                    <div style="font-size: 0.75rem; font-weight: 600; color: #28a745; margin-top: 0.2rem;">Online</div>
+                </div>
+            </div>
+            
+            <button class="btn" style="width: 100%; border: 1px dashed var(--persian-green); background: transparent; color: var(--persian-green);"><i class="fa fa-plus"></i> Add New Device</button>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div>
+        <div class="glass-panel" style="margin-bottom: 1.5rem;">
+            <h3 style="color: var(--persian-green); margin-bottom: 1.5rem;"><i class="fa fa-map-marked-alt"></i> Farm Profile</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                <div style="background: var(--persian-green-bg); padding: 1rem; border-radius: 10px; text-align: center;">
+                    <div class="info-label">Total Area</div>
+                    <div class="info-value" style="font-size: 1.5rem; color: var(--persian-green);">12.5 <span style="font-size: 1rem;">Acres</span></div>
+                </div>
+                <div style="background: var(--persian-green-bg); padding: 1rem; border-radius: 10px; text-align: center;">
+                    <div class="info-label">Soil Type</div>
+                    <div class="info-value" style="font-size: 1.2rem; color: var(--persian-green); margin-top: 0.4rem;">Alluvial</div>
+                </div>
+                <div style="background: var(--persian-green-bg); padding: 1rem; border-radius: 10px; text-align: center;">
+                    <div class="info-label">Water Source</div>
+                    <div class="info-value" style="font-size: 1.2rem; color: var(--persian-green); margin-top: 0.4rem;">Canal / Tube</div>
+                </div>
+            </div>
+            
+            <h4 style="margin-bottom: 1rem; color: var(--dark);">Current Crop Cycles</h4>
+            
+            <div style="border: 1px solid var(--gray-light); border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 700; font-size: 1.1rem;">🌾 Sharbati Wheat</span>
+                    <span style="background: #e3f2fd; color: #1976d2; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Day 45 (Vegetative)</span>
+                </div>
+                <div style="width: 100%; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
+                    <div style="width: 35%; background: #1976d2; height: 100%;"></div>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--gray); text-align: right;">Estimated Harvest: Mid April</div>
+            </div>
+            
+            <div style="border: 1px solid var(--gray-light); border-radius: 10px; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 700; font-size: 1.1rem;">🍅 Hybrid Tomatoes</span>
+                    <span style="background: #e8f5e9; color: #2e7d32; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Day 72 (Fruiting)</span>
+                </div>
+                <div style="width: 100%; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
+                    <div style="width: 65%; background: #2e7d32; height: 100%;"></div>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--gray); text-align: right;">Estimated Harvest: Late March</div>
+            </div>
+        </div>
+        
+        <div class="glass-panel">
+            <h3 style="color: var(--persian-green); margin-bottom: 1rem;"><i class="fa fa-history"></i> Recent Activity Log</h3>
+            <div class="log-item">
+                <div class="log-time">Today, 08:30 AM</div>
+                <div>
+                    <strong>AI Scan Performed</strong><br>
+                    <span style="font-size: 0.85rem; color: var(--gray);">Scanned tomato leaf. Detected Early Blight (94%).</span>
+                </div>
+            </div>
+            <div class="log-item">
+                <div class="log-time">Yesterday, 18:45</div>
+                <div>
+                    <strong>Irrigation Auto-Paused</strong><br>
+                    <span style="font-size: 0.85rem; color: var(--gray);">Zone B irrigation paused due to high moisture prediction.</span>
+                </div>
+            </div>
+            <div class="log-item">
+                <div class="log-time">12 Aug, 10:15 AM</div>
+                <div>
+                    <strong>Agri Store Purchase</strong><br>
+                    <span style="font-size: 0.85rem; color: var(--gray);">Ordered 2 bags of NPK 19:19:19.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

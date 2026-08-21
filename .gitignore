@@ -1,0 +1,23 @@
+# Python environments and caches
+.venv/
+venv/
+venv_new/
+__pycache__/
+*.py[cod]
+
+# Local secrets and runtime data
+.env
+instance/*.db
+instance/*.sqlite
+instance/*.sqlite3
+
+# Generated uploads and model artifacts
+static/uploads/*
+models/*.pkl
+models/*.joblib
+models/*.h5
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db

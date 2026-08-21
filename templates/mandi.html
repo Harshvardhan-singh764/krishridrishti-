@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block page_title %}Advanced Mandi Market Insights{% endblock %}
+
+{% block content %}
+<style>
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+    }
+    
+    .mandi-hero {
+        background: linear-gradient(135deg, var(--persian-green-dark), var(--persian-green));
+        color: white;
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .price-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--gray-light);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        animation: fadeInUp 0.6s ease-out backwards;
+    }
+    
+    .price-card:nth-child(1) { animation-delay: 0.1s; }
+    .price-card:nth-child(2) { animation-delay: 0.2s; }
+    .price-card:nth-child(3) { animation-delay: 0.3s; }
+
+    .ai-insights {
+        background: #f8fbfa;
+        border-left: 4px solid var(--warning);
+        padding: 1.5rem;
+        border-radius: 0 12px 12px 0;
+        margin-bottom: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.4s backwards;
+    }
+    
+    .table-container {
+        animation: fadeInUp 0.6s ease-out 0.5s backwards;
+    }
+    
+    .mandi-row {
+        transition: background 0.3s, transform 0.2s;
+    }
+    .mandi-row:hover {
+        background: #f1f9f5;
+        transform: scale(1.01);
+        cursor: pointer;
+    }
+</style>
+
+<div class="mandi-hero">
+    <div>
+        <h2 style="margin: 0; font-family: 'Montserrat', sans-serif;"><i class="fa fa-chart-line"></i> Market Intelligence</h2>
+        <p style="margin: 0.5rem 0 0; opacity: 0.9;">Real-time mandi rates, AI predictions, and market trends.</p>
+    </div>
+    <div style="text-align: right;">
+        <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 0.3rem;">Live Updates Active</div>
+        <div style="display: inline-block; width: 12px; height: 12px; background: #28a745; border-radius: 50%; animation: pulse 2s infinite;"></div>
+    </div>
+</div>
+
+<div class="ai-insights">
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <i class="fa fa-robot" style="font-size: 1.5rem; color: var(--warning);"></i>
+        <h3 style="margin: 0; color: var(--dark);">Gemini AI Market Insight</h3>
+    </div>
+    <p style="margin: 0; color: var(--gray); line-height: 1.6;" id="ai-insight-text">
+        <i class="fa fa-spinner fa-spin"></i> Generating market predictions based on today's data...
+    </p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="price-card">
+        <div style="color: var(--gray); font-size: 0.9rem; margin-bottom: 0.5rem; font-weight: 600;">Top Gainer (Wheat)</div>
+        <div style="font-size: 2rem; font-weight: 800; color: var(--dark);">₹2,350<span style="font-size: 1rem; color: var(--gray);">/Qtl</span></div>
+        <div style="color: var(--success); font-size: 0.9rem; margin-top: 0.5rem;"><i class="fa fa-arrow-up"></i> +₹150 from yesterday</div>
+    </div>
+    
+    <div class="price-card" style="grid-column: span 2;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div style="color: var(--gray); font-size: 0.9rem; font-weight: 600;">Wheat Price Trend (Last 7 Days)</div>
+        </div>
+        <canvas id="trendChart" height="80"></canvas>
+    </div>
+</div>
+
+<div class="glass-panel table-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h3 style="color: var(--persian-green); margin: 0;">National Mandi Rates</h3>
+        <input type="text" class="form-control" placeholder="Search Crop or State..." style="width: 250px; background: white;" onkeyup="filterTable(this.value)">
+    </div>
+    
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;" id="mandiTable">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--persian-green); color: var(--dark);">
+                    <th style="padding: 1rem;">State / Mandi</th>
+                    <th style="padding: 1rem;">Commodity</th>
+                    <th style="padding: 1rem;">Variety</th>
+                    <th style="padding: 1rem;">Min Price (₹/Qtl)</th>
+                    <th style="padding: 1rem;">Max Price (₹/Qtl)</th>
+                    <th style="padding: 1rem;">Modal Price (₹/Qtl)</th>
+                    <th style="padding: 1rem;">Trend</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rate in rates %}
+                <tr class="mandi-row" style="border-bottom: 1px solid var(--gray-light);">
+                    <td style="padding: 1rem;">{{ rate.state }} - <strong>{{ rate.market }}</strong></td>
+                    <td style="padding: 1rem; font-weight: 600; color: var(--persian-green);">{{ rate.commodity }}</td>
+                    <td style="padding: 1rem; color: var(--gray);">{{ rate.variety }}</td>
+                    <td style="padding: 1rem; color: var(--danger);">{{ rate.min_price }}</td>
+                    <td style="padding: 1rem; color: var(--success);">{{ rate.max_price }}</td>
+                    <td style="padding: 1rem; font-weight: bold; font-size: 1.1rem;">{{ rate.modal_price }}</td>
+                    <td style="padding: 1rem;">
+                        {% if loop.index % 2 == 0 %}
+                        <span style="color: var(--success);"><i class="fa fa-arrow-up"></i></span>
+                        {% else %}
+                        <span style="color: var(--danger);"><i class="fa fa-arrow-down"></i></span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterTable(query) {
+    const filter = query.toLowerCase();
+    const rows = document.getElementById("mandiTable").getElementsByTagName("tr");
+    for (let i = 1; i < rows.length; i++) {
+        const text = rows[i].textContent || rows[i].innerText;
+        if (text.toLowerCase().indexOf(filter) > -1) {
+            rows[i].style.display = "";
+        } else {
+            rows[i].style.display = "none";
+        }
+    }
+}
+
+// Initialize Trend Chart
+const ctx = document.getElementById('trendChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Today'],
+        datasets: [{
+            label: 'Wheat (₹/Qtl)',
+            data: [2100, 2150, 2120, 2200, 2250, 2300, 2350],
+            borderColor: '#1B4D3E',
+            backgroundColor: 'rgba(27, 77, 62, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#1B4D3E',
+            pointRadius: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: false, min: 2000 } }
+    }
+});
+
+// Simulate AI Insight Loading
+setTimeout(() => {
+    document.getElementById('ai-insight-text').innerHTML = 
+        "Based on recent data, <strong>Wheat</strong> prices in Punjab are showing a steady upward trend (+12% this week). " +
+        "Wait 2-3 days before selling for maximum profit. <strong>Onion</strong> prices in Maharashtra are fluctuating; " +
+        "consider selling 50% of the harvest now to mitigate risk.";
+}, 1500);
+</script>
+{% endblock %}

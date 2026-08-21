@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block page_title %}Real-Time Overview{% endblock %}
+
+{% block content %}
+<div class="welcome-hero"><h1>Welcome Back, Farmer! &#127807;</h1><p>Your AgriDrishti AI dashboard is live &bull; &#10024; Powered by Google Gemini AI</p></div>
+
+<div class="dashboard-grid">
+    
+    <!-- Weather Widget -->
+    <div class="glass-panel">
+        <div class="metric-label">Current Weather</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div class="metric-value" id="temp-val">--°C</div>
+                <div id="weather-cond" style="color: var(--gray);">Loading...</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="metric-label">Humidity</div>
+                <div style="font-size: 1.2rem; font-weight: 600;" id="hum-val">--%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Soil Health Widget -->
+    <div class="glass-panel">
+        <div class="metric-label">Live Soil Health</div>
+        <div class="metric-value" id="moisture-val">--%</div>
+        <div style="color: var(--gray);">Moisture Level</div>
+        <div style="margin-top: 10px; display: flex; gap: 15px; font-size: 0.9rem;">
+            <span>N: <b id="n-val">-</b></span>
+            <span>P: <b id="p-val">-</b></span>
+            <span>K: <b id="k-val">-</b></span>
+            <span>pH: <b id="ph-val">-</b></span>
+        </div>
+    </div>
+
+    <!-- Yield Predictor Widget -->
+    <div class="glass-panel">
+        <div class="metric-label">Predicted Season Yield</div>
+        <div class="metric-value">4,250 kg</div>
+        <div style="color: var(--success);">↑ 12% vs last year</div>
+    </div>
+</div>
+
+<div class="dashboard-grid" style="margin-top: 2rem;">
+    <div class="glass-panel">
+        <div class="metric-label">Soil Moisture Trend</div>
+        <canvas id="moistureChart" height="100"></canvas>
+    </div>
+    
+    <div class="glass-panel" style="background: linear-gradient(135deg, var(--persian-green), var(--persian-green-light)); color: white;">
+        <div class="metric-label" style="color: rgba(255,255,255,0.9);"><i class="fa fa-hand-holding-usd"></i> PM Yojanas & Schemes</div>
+        <div style="margin-top: 1rem;">
+            <div style="background: rgba(255,255,255,0.15); padding: 0.8rem; border-radius: 8px; margin-bottom: 0.75rem;">
+                <div style="font-weight: 700; font-size: 0.95rem;">PM-Kisan Samman Nidhi</div>
+                <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.2rem;">e-KYC Deadline: 31st Aug 2026</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.15); padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem;">
+                <div style="font-weight: 700; font-size: 0.95rem;">PM Fasal Bima Yojana</div>
+                <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.2rem;">Rabi Registration Opens: 1st Oct</div>
+            </div>
+            <a href="/yojanas" class="btn" style="background: white; color: var(--persian-green); width: 100%; text-align: center; font-weight: 600; text-decoration: none;">View All Schemes &rarr;</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize Chart
+    const ctx = document.getElementById('moistureChart').getContext('2d');
+    const moistureChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Moisture %',
+                data: [],
+                borderColor: '#1B4D3E',
+                backgroundColor: 'rgba(27, 77, 62, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            scales: {
+                y: { min: 0, max: 100 }
+            },
+            animation: false
+        }
+    });
+
+    // WebSocket Handlers
+    socket.on('weather_update', (data) => {
+        document.getElementById('temp-val').textContent = `${data.temperature}°C`;
+        document.getElementById('hum-val').textContent = `${data.humidity}%`;
+        document.getElementById('weather-cond').textContent = data.condition;
+    });
+
+    socket.on('sensor_update', (data) => {
+        document.getElementById('moisture-val').textContent = `${data.moisture}%`;
+        document.getElementById('n-val').textContent = data.nitrogen;
+        document.getElementById('p-val').textContent = data.phosphorus;
+        document.getElementById('k-val').textContent = data.potassium;
+        document.getElementById('ph-val').textContent = data.ph;
+
+        // Update Chart
+        const time = new Date().toLocaleTimeString();
+        if(moistureChart.data.labels.length > 10) {
+            moistureChart.data.labels.shift();
+            moistureChart.data.datasets[0].data.shift();
+        }
+        moistureChart.data.labels.push(time);
+        moistureChart.data.datasets[0].data.push(data.moisture);
+        moistureChart.update();
+    });
+</script>
+{% endblock %}

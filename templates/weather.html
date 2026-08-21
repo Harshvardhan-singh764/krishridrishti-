@@ -1,0 +1,203 @@
+﻿{% extends "base.html" %}
+{% block page_title %}Weather Intelligence{% endblock %}
+{% block content %}
+
+<div class="welcome-hero" style="margin-bottom:1.5rem;">
+  <h1>&#127781; Agri-Weather Intelligence</h1>
+  <p>Real-time weather data powered by your GPS location with farming-specific insights</p>
+</div>
+
+<!-- Weather Loading State -->
+<div id="weather-loading" class="glass-panel" style="text-align:center; padding:3rem;">
+  <div style="font-size:3rem; animation:pulse 1.5s infinite;">&#127803;</div>
+  <h3 style="margin:1rem 0 0.5rem; font-family:'Montserrat',sans-serif;">Fetching Your Local Weather...</h3>
+  <p style="color:var(--gray);">Please allow location access when prompted</p>
+</div>
+
+<!-- Weather Error State -->
+<div id="weather-error" class="glass-panel" style="display:none; text-align:center; padding:3rem;">
+  <div style="font-size:3rem;">&#10060;</div>
+  <h3 style="margin:1rem 0 0.5rem; color:var(--danger);">Could Not Fetch Weather</h3>
+  <p id="weather-error-msg" style="color:var(--gray);">Location access was denied or unavailable.</p>
+  <button class="btn btn-primary" onclick="getWeather()" style="margin-top:1rem;"><i class="fa fa-refresh"></i> Retry</button>
+</div>
+
+<!-- Weather Content -->
+<div id="weather-content" style="display:none;">
+
+  <!-- Current Weather Hero -->
+  <div class="weather-hero">
+    <div>
+      <div id="weather-location" style="font-size:1.1rem; opacity:0.85; margin-bottom:0.25rem;"><i class="fa fa-map-marker-alt"></i> Loading...</div>
+      <div class="weather-temp-big" id="weather-temp">--&#176;C</div>
+      <div id="weather-condition" style="font-size:1.3rem; font-weight:600; margin:0.25rem 0;">--</div>
+      <div class="weather-meta" id="weather-feels">Feels like --</div>
+      <div class="weather-meta" id="weather-time" style="margin-top:0.3rem; font-size:0.85rem; opacity:0.7;"></div>
+    </div>
+    <div style="text-align:center;">
+      <div class="weather-icon-big" id="weather-icon-emoji">&#127803;</div>
+      <div id="weather-icon-tag" style="font-size:0.85rem; opacity:0.7;"></div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="weather-stats" style="margin-bottom:1.5rem;">
+    <div class="weather-stat">
+      <div class="weather-stat-icon">&#128167;</div>
+      <div class="weather-stat-val" id="stat-humidity">--%</div>
+      <div class="weather-stat-label">Humidity</div>
+    </div>
+    <div class="weather-stat">
+      <div class="weather-stat-icon">&#127788;</div>
+      <div class="weather-stat-val" id="stat-wind">-- km/h</div>
+      <div class="weather-stat-label">Wind Speed</div>
+    </div>
+    <div class="weather-stat">
+      <div class="weather-stat-icon">&#127985;</div>
+      <div class="weather-stat-val" id="stat-pressure">-- hPa</div>
+      <div class="weather-stat-label">Pressure</div>
+    </div>
+    <div class="weather-stat">
+      <div class="weather-stat-icon">&#128065;&#65039;</div>
+      <div class="weather-stat-val" id="stat-visibility">-- km</div>
+      <div class="weather-stat-label">Visibility</div>
+    </div>
+    <div class="weather-stat">
+      <div class="weather-stat-icon">&#127783;&#65039;</div>
+      <div class="weather-stat-val" id="stat-rain">-- mm</div>
+      <div class="weather-stat-label">Rainfall (1h)</div>
+    </div>
+  </div>
+
+  <!-- Agriculture Advice -->
+  <div class="glass-panel" style="margin-bottom:1.5rem;">
+    <h3 style="font-family:'Montserrat',sans-serif; margin-bottom:1rem; color:var(--persian-green);"><i class="fa fa-leaf"></i> Farming Advice for Today</h3>
+    <div class="agri-advice" id="agri-advice-container">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <!-- 7-Day Forecast -->
+  <div class="glass-panel">
+    <h3 style="font-family:'Montserrat',sans-serif; margin-bottom:1rem; color:var(--persian-green);"><i class="fa fa-calendar-alt"></i> 7-Day Agri Forecast</h3>
+    <div class="forecast-scroll" id="forecast-container">
+      <!-- Filled by JS -->
+    </div>
+    <div style="margin-top:1.5rem; padding:1rem; background:var(--persian-green-bg); border-radius:12px;">
+      <strong style="color:var(--persian-green);">&#128161; Planting Calendar Note:</strong>
+      <span style="color:var(--dark); font-size:0.9rem;"> Check rainfall forecasts before planning sowing, spraying, or fertilizer application to maximize effectiveness and minimize runoff.</span>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+const WEATHER_ICONS = {
+  'Thunderstorm': '&#9928;&#65039;',
+  'Drizzle': '&#127746;',
+  'Rain': '&#127783;&#65039;',
+  'Snow': '&#10052;&#65039;',
+  'Clear': '&#9728;&#65039;',
+  'Clouds': '&#9925;',
+  'Mist': '&#127787;&#65039;',
+  'Fog': '&#127787;&#65039;',
+  'Haze': '&#127782;&#65039;',
+};
+
+function getWeatherEmoji(condition) {
+  for (const key in WEATHER_ICONS) {
+    if (condition.includes(key)) return WEATHER_ICONS[key];
+  }
+  return '&#127803;';
+}
+
+function getDayName(dateStr) {
+  const d = new Date(dateStr);
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
+}
+
+async function getWeather() {
+  document.getElementById('weather-loading').style.display = 'block';
+  document.getElementById('weather-error').style.display = 'none';
+  document.getElementById('weather-content').style.display = 'none';
+
+  if (!navigator.geolocation) {
+    showError('Geolocation is not supported by your browser.');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude.toFixed(4);
+    const lon = pos.coords.longitude.toFixed(4);
+    try {
+      const resp = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+      const data = await resp.json();
+      if (data.error) { showError(data.error); return; }
+      renderWeather(data);
+    } catch(e) {
+      showError('Network error. Please check your connection.');
+    }
+  }, (err) => {
+    showError('Location access denied. Please enable GPS/Location for weather data.');
+  }, { timeout: 10000 });
+}
+
+function showError(msg) {
+  document.getElementById('weather-loading').style.display = 'none';
+  document.getElementById('weather-content').style.display = 'none';
+  document.getElementById('weather-error').style.display = 'block';
+  document.getElementById('weather-error-msg').textContent = msg;
+}
+
+function renderWeather(data) {
+  document.getElementById('weather-loading').style.display = 'none';
+  document.getElementById('weather-error').style.display = 'none';
+  document.getElementById('weather-content').style.display = 'block';
+
+  document.getElementById('weather-location').innerHTML = `<i class="fa fa-map-marker-alt"></i> ${data.city}`;
+  document.getElementById('weather-temp').innerHTML = `${data.temp}&deg;C`;
+  document.getElementById('weather-condition').textContent = data.condition;
+  document.getElementById('weather-feels').textContent = `Feels like ${data.feels_like}\u00b0C`;
+  document.getElementById('weather-time').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+  document.getElementById('weather-icon-emoji').innerHTML = getWeatherEmoji(data.condition);
+
+  document.getElementById('stat-humidity').textContent = data.humidity + '%';
+  document.getElementById('stat-wind').textContent = data.wind_speed + ' km/h';
+  document.getElementById('stat-pressure').textContent = data.pressure + ' hPa';
+  document.getElementById('stat-visibility').textContent = data.visibility + ' km';
+  document.getElementById('stat-rain').textContent = (data.rain_1h || 0) + ' mm';
+
+  // Agriculture Advice
+  const adviceContainer = document.getElementById('agri-advice-container');
+  if (data.advice && data.advice.length > 0) {
+    adviceContainer.innerHTML = data.advice.map(a => `
+      <div class="advice-card ${a.type}">
+        <div class="advice-icon">${a.icon}</div>
+        <div><strong>${a.type.charAt(0).toUpperCase() + a.type.slice(1)}:</strong> ${a.text}</div>
+      </div>
+    `).join('');
+  }
+
+  // Forecast
+  const forecastContainer = document.getElementById('forecast-container');
+  if (data.forecast && data.forecast.length > 0) {
+    forecastContainer.innerHTML = data.forecast.map(f => `
+      <div class="forecast-card">
+        <div class="forecast-day">${getDayName(f.date)}</div>
+        <div class="forecast-icon">${getWeatherEmoji(f.condition)}</div>
+        <div class="forecast-temp">${f.min_temp}&deg; / ${f.max_temp}&deg;</div>
+        <div style="font-size:0.72rem; color:var(--gray); margin-top:0.2rem;">${f.condition}</div>
+        ${f.rain_mm > 0 ? `<div class="forecast-rain">&#127783;&#65039; ${f.rain_mm} mm</div>` : ''}
+        <div style="font-size:0.72rem; color:var(--persian-green); margin-top:0.2rem;">&#128167; ${f.avg_humidity}%</div>
+      </div>
+    `).join('');
+  }
+}
+
+// Auto-load on page open
+document.addEventListener('DOMContentLoaded', getWeather);
+</script>
+{% endblock %}

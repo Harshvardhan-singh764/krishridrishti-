@@ -1,0 +1,166 @@
+﻿{% extends "base.html" %}
+{% block page_title %}{{ product.name }}{% endblock %}
+{% block content %}
+
+<!-- Breadcrumb -->
+<div style="margin-bottom:1.5rem; font-size:0.9rem; color:var(--gray);">
+  <a href="/store" style="color:var(--persian-green); text-decoration:none;"><i class="fa fa-store"></i> Agri Store</a>
+  <span style="margin:0 0.5rem;">/</span>
+  <span class="cat-badge cat-{{ product.category }}">{{ product.category|upper }}</span>
+  <span style="margin:0 0.5rem;">/</span>
+  <span>{{ product.name }}</span>
+</div>
+
+<!-- Product Detail Main -->
+<div class="glass-panel" style="margin-bottom:1.5rem;">
+  <div class="product-detail-grid">
+    <!-- Left: Image -->
+    <div>
+      <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-detail-img" onerror="this.src='/static/images/logo.png'">
+      {% if product.is_featured %}
+      <div style="margin-top:0.75rem; text-align:center;">
+        <span style="background:var(--gold); color:white; padding:0.3rem 1rem; border-radius:20px; font-weight:700; font-size:0.85rem;"><i class="fa fa-star"></i> Featured Product</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: Details -->
+    <div>
+      <span class="cat-badge cat-{{ product.category }}">{{ product.category|upper }}</span>
+      {% if product.sub_category %}<span class="cat-badge" style="background:var(--persian-green-bg); color:var(--persian-green); margin-left:0.3rem;">{{ product.sub_category|replace('_',' ')|upper }}</span>{% endif %}
+      <div style="font-size:0.85rem; font-weight:700; color:var(--persian-green); text-transform:uppercase; letter-spacing:1px; margin:0.5rem 0 0.3rem;">{{ product.brand }}</div>
+      <h1 style="font-family:'Montserrat',sans-serif; font-size:1.6rem; font-weight:900; line-height:1.3; margin-bottom:0.5rem;">{{ product.name }}</h1>
+      <div style="font-size:0.9rem; color:var(--gray); margin-bottom:0.75rem;">{{ product.unit }}</div>
+
+      <!-- Rating -->
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem;">
+        <span class="stars" style="font-size:1.1rem;">
+          {% for i in range(product.rating|int) %}&#9733;{% endfor %}{% if product.rating - product.rating|int >= 0.5 %}&#9734;{% endif %}
+        </span>
+        <span style="font-weight:700; color:var(--dark);">{{ product.rating }}</span>
+        <span style="color:var(--gray);">({{ product.reviews_count }} reviews)</span>
+        <span style="color: {% if product.stock > 50 %}var(--success){% elif product.stock > 0 %}var(--warning){% else %}var(--danger){% endif %}; font-weight:600; margin-left:auto;">
+          {% if product.stock > 50 %}<i class="fa fa-check-circle"></i> In Stock{% elif product.stock > 0 %}Only {{ product.stock }} left!{% else %}Out of Stock{% endif %}
+        </span>
+      </div>
+
+      <!-- Price -->
+      <div style="margin-bottom:1.25rem; padding:1rem; background:var(--persian-green-bg); border-radius:12px;">
+        <span style="font-size:2.2rem; font-weight:900; color:var(--persian-green); font-family:'Montserrat',sans-serif;">&#8377;{{ product.price|int }}</span>
+        {% if product.original_price %}
+          <span style="font-size:1.1rem; color:var(--gray); text-decoration:line-through; margin-left:0.5rem;">&#8377;{{ product.original_price|int }}</span>
+          <span style="background:var(--success); color:white; padding:0.2rem 0.7rem; border-radius:20px; font-size:0.85rem; font-weight:700; margin-left:0.5rem;">{{ (((product.original_price - product.price) / product.original_price) * 100)|int }}% OFF</span>
+        {% endif %}
+        <div style="font-size:0.85rem; color:var(--gray); margin-top:0.25rem;">Inclusive of all taxes</div>
+      </div>
+
+      <!-- Qty + Add to Cart -->
+      <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <div class="qty-selector">
+          <button class="qty-btn" onclick="changeQty(-1)">&#8722;</button>
+          <input type="number" id="qty-input" class="qty-input" value="1" min="1" max="{{ product.stock }}">
+          <button class="qty-btn" onclick="changeQty(1)">&#43;</button>
+        </div>
+        <button class="btn-cart" style="padding:0.7rem 1.5rem; font-size:1rem;" onclick="addToCartDetail({{ product.id }})">
+          <i class="fa fa-cart-plus"></i> Add to Cart
+        </button>
+        <button class="btn" style="background:var(--success); color:white; padding:0.7rem 1.5rem;" onclick="buyNow({{ product.id }})">
+          <i class="fa fa-bolt"></i> Buy Now
+        </button>
+      </div>
+
+      <!-- Key Info Table -->
+      <table class="info-table">
+        <tr><td>Brand</td><td>{{ product.brand }}</td></tr>
+        <tr><td>Category</td><td>{{ product.category|capitalize }}</td></tr>
+        <tr><td>Unit / Pack Size</td><td>{{ product.unit }}</td></tr>
+        {% if product.active_ingredient %}<tr><td>Active Ingredient</td><td>{{ product.active_ingredient }}</td></tr>{% endif %}
+        {% if product.crop_suitable_for %}<tr><td>Suitable For</td><td>{{ product.crop_suitable_for }}</td></tr>{% endif %}
+        <tr><td>Stock Available</td><td>{{ product.stock }} units</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs: Description / Usage / Safety -->
+<div class="glass-panel" style="margin-bottom:1.5rem;">
+  <div style="display:flex; border-bottom:2px solid var(--gray-light); margin-bottom:1.5rem; gap:0;">
+    <button class="tab-btn active" onclick="showTab('desc', this)" style="padding:0.75rem 1.5rem; border:none; background:none; cursor:pointer; font-weight:700; color:var(--persian-green); border-bottom:3px solid var(--persian-green); font-size:0.95rem;">&#128221; Description</button>
+    <button class="tab-btn" onclick="showTab('usage', this)" style="padding:0.75rem 1.5rem; border:none; background:none; cursor:pointer; font-weight:600; color:var(--gray); font-size:0.95rem;">&#127807; Usage Instructions</button>
+    <button class="tab-btn" onclick="showTab('safety', this)" style="padding:0.75rem 1.5rem; border:none; background:none; cursor:pointer; font-weight:600; color:var(--gray); font-size:0.95rem;">&#9888;&#65039; Safety Information</button>
+  </div>
+
+  <div id="tab-desc" class="tab-content">
+    <p style="line-height:1.8; font-size:0.95rem;">{{ product.description or 'No description available.' }}</p>
+  </div>
+  <div id="tab-usage" class="tab-content" style="display:none;">
+    <div style="background:var(--persian-green-bg); border-radius:12px; padding:1.25rem; line-height:1.8; font-size:0.95rem;">
+      <i class="fa fa-leaf" style="color:var(--persian-green); margin-right:0.5rem;"></i>
+      {{ product.usage_instructions or 'Please refer to the product label for usage instructions.' }}
+    </div>
+  </div>
+  <div id="tab-safety" class="tab-content" style="display:none;">
+    <div class="safety-box">
+      <div style="font-weight:700; color:var(--danger); margin-bottom:0.5rem;"><i class="fa fa-exclamation-triangle"></i> Safety Information</div>
+      <p style="line-height:1.8; font-size:0.95rem;">{{ product.safety_info or 'Always read and follow label instructions.' }}</p>
+    </div>
+  </div>
+</div>
+
+<!-- Related Products -->
+{% if related %}
+<div class="glass-panel">
+  <h3 style="font-family:'Montserrat',sans-serif; margin-bottom:1.25rem; color:var(--persian-green);">Related Products</h3>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1rem;">
+    {% for r in related %}
+    <a href="/store/{{ r.id }}" style="text-decoration:none; color:inherit;">
+      <div style="background:white; border-radius:14px; overflow:hidden; border:1px solid var(--gray-light); transition:transform 0.2s; cursor:pointer;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+        <img src="{{ r.image_url }}" style="width:100%; height:130px; object-fit:cover;" onerror="this.src='/static/images/logo.png'">
+        <div style="padding:0.75rem;">
+          <div style="font-weight:700; font-size:0.85rem; line-height:1.3;">{{ r.name }}</div>
+          <div style="color:var(--persian-green); font-weight:700; margin-top:0.3rem;">&#8377;{{ r.price|int }}</div>
+          <button class="btn-cart" style="width:100%; margin-top:0.5rem; padding:0.5rem;" onclick="event.preventDefault(); addToCart({{ r.id }})"><i class="fa fa-cart-plus"></i> Add</button>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+{% block scripts %}
+<script>
+function showTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.getElementById('tab-' + tab).style.display = 'block';
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.style.color = 'var(--gray)';
+    b.style.borderBottom = 'none';
+    b.style.fontWeight = '600';
+  });
+  btn.style.color = 'var(--persian-green)';
+  btn.style.borderBottom = '3px solid var(--persian-green)';
+  btn.style.fontWeight = '700';
+}
+
+function changeQty(delta) {
+  const inp = document.getElementById('qty-input');
+  const val = parseInt(inp.value) + delta;
+  const max = parseInt(inp.max);
+  if (val >= 1 && val <= max) inp.value = val;
+}
+
+function addToCartDetail(productId) {
+  const qty = parseInt(document.getElementById('qty-input').value);
+  addToCart(productId, qty);
+}
+
+function buyNow(productId) {
+  const qty = parseInt(document.getElementById('qty-input').value);
+  addToCart(productId, qty).then(() => {
+    alert('Item added to cart! Proceed to checkout.');
+  });
+}
+</script>
+{% endblock %}

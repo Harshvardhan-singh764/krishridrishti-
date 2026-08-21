@@ -1,0 +1,533 @@
+﻿{% extends "base.html" %}
+{% block page_title %}Agri Map & Live Weather{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="welcome-hero" style="margin-bottom:1.25rem; padding:1.25rem 2rem;">
+  <h1 style="font-size:1.9rem;">&#127758; Agri Intelligence Map</h1>
+  <p>Live weather &bull; Nearby Mandis, Soil Labs, Agri Shops, Grain Buyers &bull; Mark your farm</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TOP ROW:  LIVE WEATHER STRIP
+════════════════════════════════════════════════════════════ -->
+<div id="wx-loading" class="glass-panel" style="margin-bottom:1rem; padding:0.85rem 1.5rem; display:flex; align-items:center; gap:1rem;">
+  <div style="font-size:1.6rem; animation:spin 1.5s linear infinite;">&#9680;</div>
+  <span style="color:var(--gray); font-size:0.9rem;">Detecting location &amp; fetching live weather…</span>
+</div>
+
+<div id="wx-strip" class="glass-panel" style="display:none; margin-bottom:1rem; padding:0; overflow:hidden;">
+  <!-- Header band -->
+  <div style="background:linear-gradient(135deg,#1B4D3E,#2E7D64); color:white; padding:0.85rem 1.5rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:0.75rem; flex:1; min-width:200px;">
+      <div id="wx-emoji" style="font-size:2.8rem; line-height:1;">&#127803;</div>
+      <div>
+        <div style="font-family:'Montserrat',sans-serif; font-size:1.75rem; font-weight:900; line-height:1;" id="wx-temp">--°C</div>
+        <div style="font-size:0.85rem; opacity:0.9;" id="wx-desc">Loading…</div>
+        <div style="font-size:0.78rem; opacity:0.75;" id="wx-loc"><i class="fa fa-map-marker-alt"></i> --</div>
+      </div>
+    </div>
+    <!-- Quick stats inline -->
+    <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-size:1.1rem; font-weight:700;" id="wx-humidity">--%</div>
+        <div style="font-size:0.7rem; opacity:0.75;">Humidity</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.1rem; font-weight:700;" id="wx-wind">-- km/h</div>
+        <div style="font-size:0.7rem; opacity:0.75;">Wind</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.1rem; font-weight:700;" id="wx-feels">--°C</div>
+        <div style="font-size:0.7rem; opacity:0.75;">Feels Like</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.1rem; font-weight:700;" id="wx-pressure">-- hPa</div>
+        <div style="font-size:0.7rem; opacity:0.75;">Pressure</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.1rem; font-weight:700;" id="wx-vis">-- km</div>
+        <div style="font-size:0.7rem; opacity:0.75;">Visibility</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.1rem; font-weight:700;" id="wx-rain">-- mm</div>
+        <div style="font-size:0.7rem; opacity:0.75;">Rain (1h)</div>
+      </div>
+    </div>
+    <div style="margin-left:auto; font-size:0.72rem; opacity:0.6;" id="wx-updated"></div>
+  </div>
+
+  <!-- Farming Advice bar -->
+  <div id="wx-advice-bar" style="padding:0.6rem 1.5rem; background:#f0faf5; border-bottom:1px solid #d4ead9; display:flex; gap:0.6rem; flex-wrap:wrap; align-items:flex-start;"></div>
+
+  <!-- 7-day forecast strip -->
+  <div style="padding:0.85rem 1.5rem; background:white;">
+    <div style="font-size:0.78rem; font-weight:700; color:var(--persian-green); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:0.6rem;"><i class="fa fa-calendar-alt"></i> 7-Day Forecast</div>
+    <div id="wx-forecast" style="display:flex; gap:0.75rem; overflow-x:auto; padding-bottom:4px;"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LAYER CONTROLS
+════════════════════════════════════════════════════════════ -->
+<div class="glass-panel" style="margin-bottom:1rem; padding:0.85rem 1.5rem;">
+  <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
+    <span style="font-size:0.78rem; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px;">Map Layers:</span>
+    <button class="map-layer-btn active" id="btn-mandi"      onclick="toggleLayer('mandi', this)">&#127800; Mandis</button>
+    <button class="map-layer-btn"        id="btn-soil"       onclick="toggleLayer('soil', this)">&#128207; Soil Labs</button>
+    <button class="map-layer-btn"        id="btn-fertilizer" onclick="toggleLayer('fertilizer', this)">&#127807; Agri Shops</button>
+    <button class="map-layer-btn"        id="btn-buyers"     onclick="toggleLayer('buyers', this)">&#127799; Grain Buyers</button>
+    <button class="map-layer-btn"        id="btn-water"      onclick="toggleLayer('water', this)">&#128167; Water</button>
+    <div style="margin-left:auto; display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="startFarmDraw()" id="btn-draw" style="font-size:0.82rem; padding:0.45rem 1rem;"><i class="fa fa-draw-polygon"></i> Mark My Farm</button>
+      <button class="btn" style="background:var(--danger);color:white;font-size:0.82rem; padding:0.45rem 1rem;" onclick="clearFarm()"><i class="fa fa-trash"></i> Clear</button>
+      <button class="btn" style="background:var(--info);color:white;font-size:0.82rem; padding:0.45rem 1rem;" onclick="locateMe()"><i class="fa fa-location-arrow"></i> My Location</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAP + SIDEBAR
+════════════════════════════════════════════════════════════ -->
+<div style="display:grid; grid-template-columns:1fr 290px; gap:1rem; height:calc(100vh - 420px); min-height:480px;">
+
+  <!-- Map -->
+  <div class="glass-panel" style="padding:0; overflow:hidden; position:relative;">
+    <div id="agri-map" style="width:100%; height:100%; border-radius:18px;"></div>
+
+    <!-- Draw hint -->
+    <div id="draw-hint" style="display:none; position:absolute; top:12px; left:50%; transform:translateX(-50%); background:rgba(27,77,62,0.93); color:white; padding:0.55rem 1.2rem; border-radius:20px; font-size:0.82rem; font-weight:600; z-index:800; pointer-events:none; white-space:nowrap;">
+      &#128205; Click to add boundary points &bull; Double-click to finish
+    </div>
+
+    <!-- Weather overlay on map (top-right corner) -->
+    <div id="map-wx-badge" style="display:none; position:absolute; top:12px; right:12px; background:rgba(27,77,62,0.88); backdrop-filter:blur(8px); color:white; border-radius:12px; padding:0.6rem 0.9rem; z-index:800; font-size:0.82rem; min-width:130px;">
+      <div style="display:flex; align-items:center; gap:0.4rem; font-weight:700; font-size:1rem;">
+        <span id="badge-emoji">&#127803;</span>
+        <span id="badge-temp">--°C</span>
+      </div>
+      <div id="badge-desc" style="font-size:0.72rem; opacity:0.85; margin-top:2px;"></div>
+      <div id="badge-loc" style="font-size:0.68rem; opacity:0.7; margin-top:1px;"><i class="fa fa-map-marker-alt"></i> --</div>
+    </div>
+
+    <!-- Legend -->
+    <div style="position:absolute; bottom:16px; left:16px; background:rgba(255,255,255,0.96); border-radius:12px; padding:0.65rem 0.9rem; z-index:800; font-size:0.75rem; box-shadow:0 2px 12px rgba(0,0,0,0.13); line-height:1.7;">
+      <div style="font-weight:700; margin-bottom:0.3rem; color:var(--persian-green); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.5px;">Legend</div>
+      <div>&#127800; Mandi / Market</div>
+      <div>&#128207; Soil Testing Lab</div>
+      <div>&#127807; Agri / Fertilizer Shop</div>
+      <div>&#127799; Grain / Crop Buyer</div>
+      <div>&#128167; Water Source</div>
+      <div>&#128506; Your Farm Area</div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div style="display:flex; flex-direction:column; gap:0.75rem; overflow:hidden; min-height:0;">
+
+    <!-- Places count header -->
+    <div class="glass-panel" style="padding:0.85rem 1rem; flex-shrink:0;">
+      <h4 style="font-family:'Montserrat',sans-serif; color:var(--persian-green); margin-bottom:0.3rem; font-size:0.95rem;"><i class="fa fa-list-ul"></i> Nearby Places</h4>
+      <div style="font-size:0.78rem; color:var(--gray);" id="places-count">Waiting for location…</div>
+    </div>
+
+    <!-- Scrollable place cards -->
+    <div id="places-list" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:0.5rem; min-height:0;">
+      <div class="glass-panel" style="text-align:center; padding:1.5rem; color:var(--gray);">
+        <div style="font-size:1.8rem;">&#127758;</div>
+        <div style="margin-top:0.4rem; font-size:0.82rem;">Allow location to see nearby places</div>
+      </div>
+    </div>
+
+    <!-- Farm Info -->
+    <div class="glass-panel" style="padding:0.85rem 1rem; flex-shrink:0;" id="farm-panel">
+      <h4 style="font-family:'Montserrat',sans-serif; color:var(--persian-green); margin-bottom:0.5rem; font-size:0.9rem;"><i class="fa fa-map"></i> My Farm</h4>
+      <div id="farm-info" style="font-size:0.8rem; color:var(--gray);">No farm marked yet. Click "Mark My Farm" to draw your field boundary.</div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+
+<style>
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.map-layer-btn {
+  display:flex; align-items:center; gap:0.35rem;
+  padding:0.4rem 0.85rem; border-radius:20px; border:2px solid var(--gray-light);
+  background:white; cursor:pointer; font-size:0.8rem; font-weight:600; color:var(--dark);
+  transition:all 0.2s; white-space:nowrap;
+}
+.map-layer-btn:hover { border-color:var(--persian-green); color:var(--persian-green); }
+.map-layer-btn.active { background:var(--persian-green); color:white; border-color:var(--persian-green); }
+.place-card {
+  background:white; border-radius:10px; padding:0.75rem 0.85rem;
+  border:1px solid var(--gray-light); cursor:pointer;
+  transition:box-shadow 0.2s, transform 0.2s; flex-shrink:0;
+}
+.place-card:hover { box-shadow:0 4px 14px rgba(0,0,0,0.1); transform:translateY(-2px); }
+.place-name { font-weight:700; font-size:0.84rem; line-height:1.3; }
+.place-dist { font-size:0.74rem; color:var(--persian-green); font-weight:600; margin-top:2px; }
+
+/* Advice pills */
+.advice-pill {
+  display:flex; align-items:center; gap:0.4rem;
+  padding:0.3rem 0.75rem; border-radius:20px; font-size:0.78rem; font-weight:600;
+  flex-shrink:0;
+}
+.advice-pill.success  { background:#e8f5e9; color:#1b5e20; }
+.advice-pill.warning  { background:#fff8e1; color:#b45309; }
+.advice-pill.danger   { background:#fdecea; color:#b71c1c; }
+.advice-pill.info     { background:#e3f2fd; color:#0d47a1; }
+
+/* Forecast mini-card */
+.fc-card {
+  background:var(--persian-green-bg); border-radius:10px; padding:0.55rem 0.7rem;
+  text-align:center; min-width:80px; flex-shrink:0; border:1px solid #cde8db;
+}
+.fc-card .fc-day  { font-size:0.7rem; font-weight:700; color:var(--persian-green); }
+.fc-card .fc-ico  { font-size:1.4rem; margin:2px 0; }
+.fc-card .fc-tmp  { font-size:0.78rem; font-weight:700; color:var(--dark); }
+.fc-card .fc-rain { font-size:0.68rem; color:var(--info); }
+.fc-card .fc-hum  { font-size:0.67rem; color:var(--gray); }
+</style>
+
+<script>
+// ──────────────────────────────────────────
+//  WEATHER EMOJI MAP
+// ──────────────────────────────────────────
+const WX_EMOJI = {
+  Thunderstorm:'⛈️', Drizzle:'🌦️', Rain:'🌧️', Snow:'❄️',
+  Clear:'☀️', Clouds:'⛅', Mist:'🌫️', Fog:'🌫️', Haze:'🌫️',
+  Smoke:'🌁', Dust:'🌬️', Sand:'🌬️', Squall:'💨', Tornado:'🌪️'
+};
+function wxEmoji(cond) {
+  for (const k in WX_EMOJI) if (cond.includes(k)) return WX_EMOJI[k];
+  return '🌡️';
+}
+function dayLabel(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const today = new Date(); today.setHours(12,0,0,0);
+  const diff = Math.round((d-today)/86400000);
+  if (diff===0) return 'Today';
+  if (diff===1) return 'Tomorrow';
+  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+}
+function fmtTime() {
+  return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ──────────────────────────────────────────
+//  RENDER WEATHER STRIP
+// ──────────────────────────────────────────
+function renderWeatherStrip(data) {
+  document.getElementById('wx-loading').style.display = 'none';
+  const strip = document.getElementById('wx-strip');
+  strip.style.display = 'block';
+
+  const emoji = wxEmoji(data.condition);
+
+  // Header
+  document.getElementById('wx-emoji').textContent    = emoji;
+  document.getElementById('wx-temp').textContent     = data.temp + '°C';
+  document.getElementById('wx-desc').textContent     = data.condition;
+  document.getElementById('wx-loc').innerHTML        = '<i class="fa fa-map-marker-alt"></i> ' + data.city;
+  document.getElementById('wx-humidity').textContent = data.humidity + '%';
+  document.getElementById('wx-wind').textContent     = data.wind_speed + ' km/h';
+  document.getElementById('wx-feels').textContent    = data.feels_like + '°C';
+  document.getElementById('wx-pressure').textContent = data.pressure + ' hPa';
+  document.getElementById('wx-vis').textContent      = data.visibility + ' km';
+  document.getElementById('wx-rain').textContent     = (data.rain_1h || 0) + ' mm';
+  document.getElementById('wx-updated').textContent  = 'Updated ' + fmtTime();
+
+  // Map badge
+  document.getElementById('map-wx-badge').style.display = 'block';
+  document.getElementById('badge-emoji').textContent = emoji;
+  document.getElementById('badge-temp').textContent  = data.temp + '°C';
+  document.getElementById('badge-desc').textContent  = data.condition;
+  document.getElementById('badge-loc').innerHTML     = '<i class="fa fa-map-marker-alt"></i> ' + data.city;
+
+  // Farming advice pills
+  const advBar = document.getElementById('wx-advice-bar');
+  if (data.advice && data.advice.length) {
+    advBar.innerHTML = data.advice.map(a =>
+      `<div class="advice-pill ${a.type}">${a.icon} ${a.text}</div>`
+    ).join('');
+  } else {
+    advBar.style.display = 'none';
+  }
+
+  // 7-day forecast cards
+  const fcast = document.getElementById('wx-forecast');
+  if (data.forecast && data.forecast.length) {
+    fcast.innerHTML = data.forecast.map(f => `
+      <div class="fc-card">
+        <div class="fc-day">${dayLabel(f.date)}</div>
+        <div class="fc-ico">${wxEmoji(f.condition)}</div>
+        <div class="fc-tmp">${f.min_temp}° / ${f.max_temp}°</div>
+        ${f.rain_mm > 0 ? `<div class="fc-rain">🌧️ ${f.rain_mm}mm</div>` : ''}
+        <div class="fc-hum">💧 ${f.avg_humidity}%</div>
+      </div>`).join('');
+  }
+}
+
+// ──────────────────────────────────────────
+//  FETCH WEATHER FROM BACKEND
+// ──────────────────────────────────────────
+async function fetchWeather(lat, lon) {
+  try {
+    const resp = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    renderWeatherStrip(data);
+  } catch(e) {
+    // Show a minimal error note but don't block the map
+    document.getElementById('wx-loading').innerHTML =
+      '<span style="color:var(--warning); font-size:0.85rem;">&#9888; Live weather unavailable. Add an OpenWeatherMap API key in .env to enable.</span>';
+  }
+}
+
+// ──────────────────────────────────────────
+//  MAP INIT
+// ──────────────────────────────────────────
+let map, userMarker, userLat, userLon;
+let farmLayer, drawnItems;
+let activeLayers = { mandi:true, soil:false, fertilizer:false, buyers:false, water:false };
+let layerGroups = {};
+let allPlaces = [];
+
+const ICONS = {
+  mandi:      { emoji:'🌸', color:'#E91E63', label:'Mandi' },
+  soil:       { emoji:'🔬', color:'#9C27B0', label:'Soil Lab' },
+  fertilizer: { emoji:'🌿', color:'#4CAF50', label:'Agri Shop' },
+  buyers:     { emoji:'🌾', color:'#FF9800', label:'Grain Buyer' },
+  water:      { emoji:'💧', color:'#2196F3', label:'Water Source' },
+};
+
+function mkIcon(emoji, color) {
+  return L.divIcon({
+    html: `<div style="background:${color};color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;box-shadow:0 2px 8px rgba(0,0,0,0.28);border:2px solid white;">${emoji}</div>`,
+    iconSize:[36,36], iconAnchor:[18,18], popupAnchor:[0,-20], className:''
+  });
+}
+
+function initMap(lat, lon) {
+  userLat = lat; userLon = lon;
+
+  map = L.map('agri-map', { zoomControl:true }).setView([lat, lon], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom:19
+  }).addTo(map);
+
+  // User marker
+  const uIcon = L.divIcon({
+    html:`<div style="background:var(--persian-green);color:white;border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:0 3px 14px rgba(27,77,62,0.5);border:3px solid white;">👨‍🌾</div>`,
+    iconSize:[42,42], iconAnchor:[21,21], popupAnchor:[0,-24], className:''
+  });
+  userMarker = L.marker([lat, lon], { icon: uIcon }).addTo(map)
+    .bindPopup('<b>📍 You are here</b><br>Your current location').openPopup();
+  L.circle([lat, lon], { radius:200, color:'#1B4D3E', fillColor:'#1B4D3E', fillOpacity:0.07, weight:1 }).addTo(map);
+
+  // Layer groups
+  for (const k in ICONS) { layerGroups[k] = L.layerGroup().addTo(map); if (!activeLayers[k]) layerGroups[k].remove(); }
+
+  // Farm drawing
+  drawnItems = new L.FeatureGroup().addTo(map);
+  const drawCtrl = new L.Control.Draw({
+    draw: {
+      polygon: { allowIntersection:false, showArea:true, metric:true,
+        shapeOptions:{ color:'#1B4D3E', fillColor:'#27AE60', fillOpacity:0.22, weight:3 }},
+      rectangle: { shapeOptions:{ color:'#1B4D3E', fillColor:'#27AE60', fillOpacity:0.22, weight:3 }},
+      polyline:false, circle:false, circlemarker:false, marker:false
+    },
+    edit:{ featureGroup: drawnItems }
+  });
+  map.addControl(drawCtrl);
+
+  map.on(L.Draw.Event.CREATED, function(e) {
+    drawnItems.clearLayers();
+    drawnItems.addLayer(e.layer);
+    document.getElementById('draw-hint').style.display = 'none';
+    document.getElementById('btn-draw').innerHTML = '<i class="fa fa-check-circle"></i> Farm Marked!';
+    document.getElementById('btn-draw').style.background = 'var(--success)';
+    const lls = e.layer.getLatLngs ? e.layer.getLatLngs()[0] : [];
+    const aM2 = L.GeometryUtil ? L.GeometryUtil.geodesicArea(lls) : 0;
+    document.getElementById('farm-info').innerHTML = `
+      <table style="width:100%;font-size:0.8rem;">
+        <tr><td style="color:var(--gray);padding:0.25rem 0;">Area (Acres)</td><td style="font-weight:700;color:var(--persian-green);">${(aM2/4047).toFixed(2)} ac</td></tr>
+        <tr><td style="color:var(--gray);padding:0.25rem 0;">Area (Hectares)</td><td style="font-weight:700;">${(aM2/10000).toFixed(2)} ha</td></tr>
+        <tr><td colspan="2" style="padding-top:0.4rem;"><button class="btn btn-primary" style="width:100%;font-size:0.78rem;padding:0.4rem;" onclick="saveFarm()"><i class="fa fa-save"></i> Save Farm</button></td></tr>
+      </table>`;
+  });
+
+  fetchNearbyPlaces(lat, lon);
+
+  // Restore saved farm
+  try {
+    const saved = localStorage.getItem('agridrishti_farm');
+    if (saved) L.geoJSON(JSON.parse(saved), {
+      style:{color:'#1B4D3E', fillColor:'#27AE60', fillOpacity:0.22, weight:3}
+    }).addTo(drawnItems);
+  } catch(_) {}
+}
+
+// ──────────────────────────────────────────
+//  OVERPASS (real nearby places)
+// ──────────────────────────────────────────
+const OVERPASS = 'https://overpass-api.de/api/interpreter';
+const QUERIES = {
+  mandi:      (a,o,r)=>`[out:json][timeout:25];(node["amenity"="marketplace"](around:${r},${a},${o});node["shop"="farm"](around:${r},${a},${o});node["name"~"mandi|market|APMC|apmc|kisaan",i](around:${r},${a},${o});way["amenity"="marketplace"](around:${r},${a},${o}););out center;`,
+  soil:       (a,o,r)=>`[out:json][timeout:25];(node["amenity"~"laboratory|testing"](around:${r},${a},${o});node["office"~"agricultural|soil"](around:${r},${a},${o});node["name"~"soil|krishi|agri|agriculture|testing",i](around:${r},${a},${o}););out center;`,
+  fertilizer: (a,o,r)=>`[out:json][timeout:25];(node["shop"~"agrarian|farm|garden_centre"](around:${r},${a},${o});node["name"~"fertilizer|krishi|agri|seed|pesticide",i](around:${r},${a},${o}););out center;`,
+  buyers:     (a,o,r)=>`[out:json][timeout:25];(node["building"~"warehouse|storage"](around:${r},${a},${o});node["name"~"grain|trader|dal|rice|wheat|cotton|wholesale|mandal",i](around:${r},${a},${o}););out center;`,
+  water:      (a,o,r)=>`[out:json][timeout:25];(node["natural"="water"](around:${r},${a},${o});node["amenity"="water_point"](around:${r},${a},${o});way["waterway"~"river|canal"](around:${r},${a},${o}););out center;`
+};
+
+function haversine(a1,o1,a2,o2){
+  const R=6371,dA=(a2-a1)*Math.PI/180,dO=(o2-o1)*Math.PI/180;
+  const a=Math.sin(dA/2)**2+Math.cos(a1*Math.PI/180)*Math.cos(a2*Math.PI/180)*Math.sin(dO/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function genFallback(type, lat, lon) {
+  const N={mandi:['APMC Market Yard','Kisaan Mandi','Agricultural Produce Market','Grain Market'],
+           soil:['Krishi Vigyan Kendra','Soil Testing Lab','District Agriculture Office'],
+           fertilizer:['Jai Kisan Agro Centre','National Seeds Corporation','Green Field Agro'],
+           buyers:['Cooperative Society','Local Grain Trader','Kisaan Bazaar'],
+           water:['Canal Irrigation Point','Tube Well','Pond / Water Body']};
+  return (N[type]||[]).slice(0,3).map((name,i)=>({
+    type, lat:lat+(Math.random()-.5)*.07, lon:lon+(Math.random()-.5)*.07,
+    name, tags:{}, dist:0.5+i*1.8+Math.random()
+  }));
+}
+
+async function fetchLayer(type, lat, lon) {
+  try {
+    const q = QUERIES[type](lat, lon, 10000);
+    const r = await fetch(OVERPASS+'?data='+encodeURIComponent(q));
+    const d = await r.json();
+    const results = (d.elements||[]).map(el=>{
+      const la=el.lat||el.center?.lat, lo=el.lon||el.center?.lon;
+      if(!la||!lo) return null;
+      const name=el.tags?.name||el.tags?.['name:en']||el.tags?.['name:hi']||ICONS[type].label;
+      return {type,lat:la,lon:lo,name,tags:el.tags||{},dist:haversine(lat,lon,la,lo)};
+    }).filter(Boolean).sort((a,b)=>a.dist-b.dist);
+    return results.length ? results : genFallback(type,lat,lon);
+  } catch(_) { return genFallback(type,lat,lon); }
+}
+
+function buildPopup(p) {
+  const info=ICONS[p.type], dist=p.dist<1?`${(p.dist*1000).toFixed(0)} m`:`${p.dist.toFixed(1)} km`;
+  const addr=[p.tags['addr:street'],p.tags['addr:city']].filter(Boolean).join(', ');
+  const ph=p.tags.phone||p.tags['contact:phone']||'';
+  const hrs=p.tags.opening_hours||'';
+  return `<div style="font-family:'Inter',sans-serif;min-width:200px;">
+    <div style="background:${info.color};color:white;padding:0.5rem 0.75rem;margin:-14px -20px 0.75rem;border-radius:8px 8px 0 0;font-weight:700;font-size:0.88rem;">${info.emoji} ${info.label}</div>
+    <div style="font-weight:700;font-size:0.95rem;margin-bottom:0.3rem;">${p.name}</div>
+    ${addr?`<div style="font-size:0.78rem;color:#666;margin-bottom:0.2rem;">📍 ${addr}</div>`:''}
+    <div style="font-size:0.78rem;color:#1B4D3E;font-weight:600;margin-bottom:0.2rem;">📏 ${dist} away</div>
+    ${ph?`<div style="font-size:0.78rem;color:#555;">📞 ${ph}</div>`:''}
+    ${hrs?`<div style="font-size:0.72rem;color:#888;margin-top:0.2rem;">🕐 ${hrs}</div>`:''}
+    <button onclick="getDir(${p.lat},${p.lon})" style="margin-top:0.5rem;width:100%;background:#1B4D3E;color:white;border:none;padding:0.38rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-weight:600;">🚗 Get Directions</button>
+  </div>`;
+}
+
+async function fetchNearbyPlaces(lat, lon) {
+  document.getElementById('places-count').textContent='Searching nearby places…';
+  document.getElementById('places-list').innerHTML='<div class="glass-panel" style="text-align:center;padding:1.5rem;color:var(--gray);"><i class="fa fa-spinner fa-spin" style="font-size:1.4rem;"></i><div style="margin-top:0.4rem;font-size:0.82rem;">Fetching real-time data…</div></div>';
+  allPlaces=[];
+  for(const type of Object.keys(ICONS)){
+    const places=await fetchLayer(type,lat,lon);
+    places.forEach(p=>{
+      allPlaces.push(p);
+      const m=L.marker([p.lat,p.lon],{icon:mkIcon(ICONS[p.type].emoji,ICONS[p.type].color)}).bindPopup(buildPopup(p),{maxWidth:260});
+      layerGroups[type].addLayer(m);
+      if(!activeLayers[type]) layerGroups[type].remove();
+    });
+  }
+  renderList();
+}
+
+function renderList(){
+  const vis=allPlaces.filter(p=>activeLayers[p.type]).sort((a,b)=>a.dist-b.dist);
+  document.getElementById('places-count').textContent=`${vis.length} places found nearby`;
+  if(!vis.length){
+    document.getElementById('places-list').innerHTML='<div class="glass-panel" style="text-align:center;padding:1.5rem;color:var(--gray);">No places found. Toggle layers.</div>';
+    return;
+  }
+  document.getElementById('places-list').innerHTML=vis.slice(0,25).map(p=>{
+    const info=ICONS[p.type], dist=p.dist<1?`${(p.dist*1000).toFixed(0)} m`:`${p.dist.toFixed(1)} km`;
+    return `<div class="place-card" onclick="flyTo(${p.lat},${p.lon})">
+      <div style="display:inline-block;font-size:0.68rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:20px;background:${info.color}22;color:${info.color};margin-bottom:0.25rem;">${info.emoji} ${info.label}</div>
+      <div class="place-name">${p.name}</div>
+      <div class="place-dist">📍 ${dist} away</div>
+      <div style="margin-top:0.4rem;display:flex;gap:0.35rem;">
+        <button onclick="event.stopPropagation();flyTo(${p.lat},${p.lon})" style="flex:1;background:var(--persian-green-bg);color:var(--persian-green);border:none;border-radius:6px;padding:0.28rem;font-size:0.72rem;font-weight:600;cursor:pointer;">🔍 View</button>
+        <button onclick="event.stopPropagation();getDir(${p.lat},${p.lon})" style="flex:1;background:var(--persian-green);color:white;border:none;border-radius:6px;padding:0.28rem;font-size:0.72rem;font-weight:600;cursor:pointer;">🚗 Directions</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function flyTo(lat,lon){
+  map.flyTo([lat,lon],16,{duration:1.4});
+  setTimeout(()=>{
+    for(const k in layerGroups) layerGroups[k].eachLayer(l=>{
+      if(l.getLatLng){const ll=l.getLatLng();if(Math.abs(ll.lat-lat)<.0002&&Math.abs(ll.lng-lon)<.0002)l.openPopup();}
+    });
+  },1500);
+}
+function getDir(lat,lon){ window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`,'_blank'); }
+
+function toggleLayer(type, btn){
+  activeLayers[type]=!activeLayers[type];
+  btn.classList.toggle('active');
+  activeLayers[type]?layerGroups[type].addTo(map):layerGroups[type].remove();
+  renderList();
+}
+
+function startFarmDraw(){
+  new L.Draw.Polygon(map,{allowIntersection:false,showArea:true,
+    shapeOptions:{color:'#1B4D3E',fillColor:'#27AE60',fillOpacity:0.22,weight:3}}).enable();
+  document.getElementById('draw-hint').style.display='block';
+  document.getElementById('btn-draw').innerHTML='<i class="fa fa-pencil"></i> Drawing…';
+  document.getElementById('btn-draw').style.background='var(--warning)';
+  document.getElementById('btn-draw').style.color='white';
+}
+function clearFarm(){
+  drawnItems.clearLayers();
+  document.getElementById('btn-draw').innerHTML='<i class="fa fa-draw-polygon"></i> Mark My Farm';
+  document.getElementById('btn-draw').style.background='var(--persian-green)';
+  document.getElementById('btn-draw').style.color='white';
+  document.getElementById('farm-info').textContent='No farm marked yet. Click "Mark My Farm" to draw your field boundary.';
+}
+function saveFarm(){
+  localStorage.setItem('agridrishti_farm',JSON.stringify(drawnItems.toGeoJSON()));
+  alert('Farm area saved! ✅');
+}
+function locateMe(){ if(userLat&&userLon){ map.flyTo([userLat,userLon],14,{duration:1.4}); userMarker.openPopup(); } }
+
+// ──────────────────────────────────────────
+//  BOOT
+// ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  if(!navigator.geolocation){ initMap(20.5937,78.9629); fetchWeather(20.5937,78.9629); return; }
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const la=pos.coords.latitude, lo=pos.coords.longitude;
+      initMap(la,lo);
+      fetchWeather(la,lo);
+    },
+    _=>{ initMap(20.5937,78.9629); fetchWeather(20.5937,78.9629); },
+    {enableHighAccuracy:true,timeout:10000}
+  );
+});
+</script>
+{% endblock %}

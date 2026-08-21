@@ -1,0 +1,683 @@
+{% extends "base.html" %}
+{% block page_title %}AI Crop Recommendation — AgriDrishti{% endblock %}
+
+{% block content %}
+<style>
+/* ── Page Layout ─────────────────────────────────────────── */
+.rec-wrap { display:flex; flex-direction:column; gap:1.1rem; }
+
+/* ── Hero Banner ─────────────────────────────────────────── */
+.rec-hero {
+  background: linear-gradient(135deg,#1B4D3E 0%,#2E7D64 55%,#3aaa80 100%);
+  border-radius:22px; padding:1.6rem 2rem;
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:1rem; color:white;
+}
+.rec-hero h1 { font-family:'Montserrat',sans-serif; font-size:1.6rem; font-weight:900; margin:0; }
+.rec-hero p  { margin:0.25rem 0 0; font-size:0.87rem; opacity:.82; }
+.rec-hero-right { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; }
+.stat-badge {
+  background:rgba(255,255,255,.15); border-radius:12px;
+  padding:0.55rem 1rem; text-align:center; min-width:80px;
+}
+.stat-badge-val { font-family:'Montserrat',sans-serif; font-size:1.3rem; font-weight:800; line-height:1; }
+.stat-badge-lbl { font-size:0.68rem; opacity:.8; margin-top:3px; }
+
+/* ── Section Cards ───────────────────────────────────────── */
+.rec-section {
+  background:white; border-radius:18px;
+  box-shadow:0 2px 14px rgba(0,0,0,.07);
+  border:1px solid #eef2ee; padding:1.4rem 1.6rem;
+}
+.rec-section-title {
+  display:flex; align-items:center; gap:0.55rem;
+  font-family:'Montserrat',sans-serif; font-size:0.78rem;
+  font-weight:800; color:var(--persian-green);
+  text-transform:uppercase; letter-spacing:1px;
+  margin-bottom:1.2rem; padding-bottom:0.7rem;
+  border-bottom:2px solid #edf7f3;
+}
+.rec-section-title i { font-size:1rem; }
+
+/* ── Voice Bar ───────────────────────────────────────────── */
+.voice-bar {
+  background:linear-gradient(135deg,#f0faf6,#e6f5ef);
+  border:1.5px solid #c8e6d8; border-radius:14px;
+  padding:0.9rem 1.4rem; display:flex;
+  align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:0.75rem; margin-bottom:0;
+}
+.voice-bar-text small { font-size:0.75rem; color:var(--gray); display:block; }
+.voice-bar-text strong { font-size:0.92rem; color:var(--dark); }
+#mic-btn {
+  display:flex; align-items:center; gap:0.5rem;
+  background:var(--persian-green); color:white;
+  border:none; border-radius:30px; padding:0.6rem 1.3rem;
+  font-weight:700; font-size:0.85rem; cursor:pointer;
+  transition:all .25s; box-shadow:0 4px 14px rgba(27,77,62,.35);
+  font-family:'Inter',sans-serif;
+}
+#mic-btn:hover { background:#145a3b; transform:translateY(-2px); box-shadow:0 6px 20px rgba(27,77,62,.4); }
+#mic-btn.listening { background:#e53e3e; animation:pulse-red 1.2s ease-in-out infinite; }
+@keyframes pulse-red { 0%,100%{box-shadow:0 0 0 0 rgba(229,62,62,.5)} 50%{box-shadow:0 0 0 10px rgba(229,62,62,0)} }
+#voice-transcript {
+  margin-top:.65rem; padding:.6rem 1rem; border-radius:10px;
+  background:#fffbe6; border:1px solid #f6e58d;
+  font-size:.83rem; color:#7c5c00; display:none;
+}
+
+/* ── Sliders Grid ────────────────────────────────────────── */
+.sliders-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.1rem; }
+.slider-card {
+  background:#f8fdf9; border:1.5px solid #e2f0e8;
+  border-radius:14px; padding:1rem 1.1rem;
+  transition:box-shadow .2s, border-color .2s;
+}
+.slider-card:hover { box-shadow:0 4px 16px rgba(27,77,62,.1); border-color:#b8ddc8; }
+.slider-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.55rem; }
+.slider-label { font-size:.78rem; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:.4px; }
+.slider-value {
+  font-family:'Montserrat',sans-serif; font-size:1.05rem; font-weight:900;
+  color:var(--persian-green);
+}
+.slider-unit { font-size:.65rem; font-weight:600; color:var(--gray); }
+/* Custom slider */
+input[type=range].rec-slider {
+  -webkit-appearance:none; width:100%; height:6px;
+  border-radius:6px; outline:none; cursor:pointer;
+  background:linear-gradient(to right, var(--persian-green) 0%, var(--persian-green) var(--pct,50%), #d0e8da var(--pct,50%), #d0e8da 100%);
+  transition:background .15s;
+}
+input[type=range].rec-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+  background:var(--persian-green); border:3px solid white;
+  box-shadow:0 2px 8px rgba(27,77,62,.4); cursor:pointer; transition:transform .15s;
+}
+input[type=range].rec-slider::-webkit-slider-thumb:hover { transform:scale(1.25); }
+input[type=range].rec-slider.yellow { background:linear-gradient(to right,#f59e0b 0%,#f59e0b var(--pct,50%),#d0e8da var(--pct,50%),#d0e8da 100%); }
+input[type=range].rec-slider.yellow::-webkit-slider-thumb { background:#f59e0b; }
+input[type=range].rec-slider.blue  { background:linear-gradient(to right,#3b82f6 0%,#3b82f6 var(--pct,50%),#d0e8da var(--pct,50%),#d0e8da 100%); }
+input[type=range].rec-slider.blue::-webkit-slider-thumb  { background:#3b82f6; }
+.slider-minmax { display:flex; justify-content:space-between; margin-top:.3rem; font-size:.62rem; color:#aaa; }
+
+/* ── Dropdowns Row ───────────────────────────────────────── */
+.dropdowns-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; }
+.drop-group label { font-size:.77rem; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:.4px; display:block; margin-bottom:.4rem; }
+.rec-select {
+  width:100%; padding:.6rem .9rem; border-radius:10px;
+  border:1.5px solid #d4e8db; background:white; font-size:.87rem;
+  font-family:'Inter',sans-serif; color:var(--dark); cursor:pointer;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231B4D3E' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right .8rem center;
+  transition:border-color .2s, box-shadow .2s;
+}
+.rec-select:focus { outline:none; border-color:var(--persian-green); box-shadow:0 0 0 3px rgba(27,77,62,.12); }
+
+/* ── Analyze Button ──────────────────────────────────────── */
+.analyze-btn-wrap { padding:0 0 0.2rem; }
+.analyze-btn {
+  width:100%; padding:1.05rem 2rem;
+  background:linear-gradient(135deg,#1B4D3E,#2E7D64);
+  color:white; border:none; border-radius:16px;
+  font-family:'Montserrat',sans-serif; font-size:1.05rem;
+  font-weight:800; cursor:pointer; letter-spacing:.5px;
+  display:flex; align-items:center; justify-content:center; gap:.65rem;
+  box-shadow:0 6px 24px rgba(27,77,62,.38);
+  transition:all .25s;
+}
+.analyze-btn:hover { transform:translateY(-3px); box-shadow:0 10px 30px rgba(27,77,62,.45); }
+.analyze-btn:active { transform:translateY(0); }
+.analyze-btn:disabled { opacity:.65; cursor:not-allowed; transform:none; }
+.analyze-btn i { font-size:1.2rem; }
+.analyze-btn .spinner { width:20px; height:20px; border:3px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; animation:spin 0.8s linear infinite; display:none; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── Results Section ─────────────────────────────────────── */
+#results-section { display:none; }
+.results-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; margin-bottom:1.2rem; }
+.results-header h2 { font-family:'Montserrat',sans-serif; font-size:1.15rem; font-weight:900; color:var(--dark); margin:0; }
+.top-pick-badge { background:linear-gradient(135deg,#f59e0b,#d97706); color:white; border-radius:20px; padding:.3rem .85rem; font-size:.75rem; font-weight:800; display:flex; align-items:center; gap:.3rem; }
+
+/* Results Grid */
+.results-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; }
+@media(max-width:900px){ .results-grid{grid-template-columns:1fr 1fr;} }
+@media(max-width:580px){ .results-grid{grid-template-columns:1fr;} }
+
+.crop-card {
+  border-radius:18px; overflow:hidden; border:2px solid transparent;
+  box-shadow:0 3px 16px rgba(0,0,0,.08); background:white;
+  transition:transform .25s, box-shadow .25s, border-color .25s;
+  cursor:pointer; position:relative;
+}
+.crop-card:hover { transform:translateY(-6px); box-shadow:0 12px 36px rgba(27,77,62,.18); border-color:var(--persian-green); }
+.crop-card.rank-1 { border-color:#f59e0b; box-shadow:0 4px 24px rgba(245,158,11,.25); }
+.crop-card.rank-1:hover { box-shadow:0 12px 36px rgba(245,158,11,.35); }
+
+.crop-img-wrap { position:relative; overflow:hidden; height:168px; }
+.crop-img-wrap img { width:100%; height:100%; object-fit:cover; transition:transform .5s; }
+.crop-card:hover .crop-img-wrap img { transform:scale(1.07); }
+.rank-ribbon {
+  position:absolute; top:10px; left:10px; z-index:2;
+  font-family:'Montserrat',sans-serif; font-size:.72rem; font-weight:900;
+  padding:.25rem .75rem; border-radius:20px; letter-spacing:.5px;
+}
+.rank-ribbon.gold   { background:linear-gradient(135deg,#f59e0b,#d97706); color:white; }
+.rank-ribbon.silver { background:linear-gradient(135deg,#94a3b8,#64748b); color:white; }
+.rank-ribbon.bronze { background:linear-gradient(135deg,#cd7f32,#a0522d); color:white; }
+.rank-ribbon.other  { background:rgba(27,77,62,.85); color:white; }
+.conf-badge {
+  position:absolute; top:10px; right:10px; z-index:2;
+  background:rgba(0,0,0,.65); backdrop-filter:blur(6px);
+  color:white; border-radius:20px; padding:.25rem .7rem;
+  font-size:.78rem; font-weight:700;
+}
+
+.crop-body { padding:1rem 1.1rem 1.1rem; }
+.crop-name { font-family:'Montserrat',sans-serif; font-size:1.05rem; font-weight:900; color:var(--dark); margin:0 0 .2rem; }
+.crop-hindi { font-size:.75rem; color:var(--gray); margin:0 0 .7rem; }
+.conf-bar-wrap { margin-bottom:.75rem; }
+.conf-bar-label { display:flex; justify-content:space-between; font-size:.73rem; font-weight:700; margin-bottom:.3rem; }
+.conf-bar-label span:first-child { color:var(--gray); }
+.conf-bar-label span:last-child { color:var(--persian-green); }
+.conf-bar-bg { background:#e8f5e9; border-radius:20px; height:7px; overflow:hidden; }
+.conf-bar-fill { height:100%; border-radius:20px; background:linear-gradient(90deg,var(--persian-green),#3aaa80); transition:width 1s cubic-bezier(.4,0,.2,1); }
+.rank-1 .conf-bar-fill { background:linear-gradient(90deg,#d97706,#f59e0b); }
+
+.crop-tags { display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:.8rem; }
+.crop-tag {
+  font-size:.67rem; font-weight:700; padding:.2rem .55rem; border-radius:20px;
+  background:#e8f5e9; color:var(--persian-green);
+}
+.crop-tag.water { background:#e3f2fd; color:#1565c0; }
+.crop-tag.season { background:#fff8e1; color:#b45309; }
+.crop-tag.roi { background:#fce4ec; color:#c2185b; }
+
+.crop-stats-row { display:flex; gap:.5rem; }
+.crop-stat { flex:1; background:#f8fdf9; border-radius:10px; padding:.5rem; text-align:center; }
+.crop-stat-val { font-family:'Montserrat',sans-serif; font-size:.9rem; font-weight:800; color:var(--persian-green); }
+.crop-stat-lbl { font-size:.62rem; color:var(--gray); font-weight:600; margin-top:1px; }
+
+/* Input Summary */
+.input-summary {
+  display:flex; gap:.5rem; flex-wrap:wrap; align-items:center;
+  padding:.7rem 1rem; background:#f0faf6; border-radius:12px; margin-bottom:1rem;
+  font-size:.78rem; color:var(--dark);
+}
+.input-summary span { background:white; border:1px solid #d4ead9; border-radius:8px; padding:.2rem .6rem; font-weight:700; }
+</style>
+
+<div class="rec-wrap">
+
+  <!-- ── Hero ── -->
+  <div class="rec-hero">
+    <div>
+      <h1>🌾 AI Crop Recommendation</h1>
+      <p>Enter your soil, weather &amp; location parameters — our ML model will predict the best crops for maximum yield</p>
+    </div>
+    <div class="rec-hero-right">
+      <div class="stat-badge"><div class="stat-badge-val">22</div><div class="stat-badge-lbl">Crop Types</div></div>
+      <div class="stat-badge"><div class="stat-badge-val">97%</div><div class="stat-badge-lbl">Accuracy</div></div>
+      <div class="stat-badge"><div class="stat-badge-val">ML</div><div class="stat-badge-lbl">Powered</div></div>
+    </div>
+  </div>
+
+  <!-- ── Voice Input ── -->
+  <div class="rec-section">
+    <div class="rec-section-title"><i class="fa fa-microphone-alt"></i> Voice Input (Optional)</div>
+    <div class="voice-bar">
+      <div class="voice-bar-text">
+        <strong>🎤 Voice Telemetry Input</strong>
+        <small>Click the mic and speak your farming details (e.g. "Nitrogen 90, temperature 28 degrees, Kharif season")</small>
+      </div>
+      <button id="mic-btn" onclick="toggleMic()">
+        <i class="fa fa-microphone" id="mic-icon"></i> <span id="mic-label">Speak Now</span>
+      </button>
+    </div>
+    <div id="voice-transcript"></div>
+  </div>
+
+  <!-- ── Soil NPK & pH ── -->
+  <div class="rec-section">
+    <div class="rec-section-title"><i class="fa fa-flask"></i> Soil NPK &amp; pH Parameters</div>
+    <div class="sliders-grid">
+
+      <div class="slider-card">
+        <div class="slider-header">
+          <span class="slider-label">Nitrogen (N)</span>
+          <span class="slider-value" id="n-display">90 <span class="slider-unit">kg/ha</span></span>
+        </div>
+        <input type="range" class="rec-slider" id="n-val" min="0" max="140" value="90"
+          oninput="updateSlider(this,'n-display','kg/ha')">
+        <div class="slider-minmax"><span>0</span><span>140 kg/ha</span></div>
+      </div>
+
+      <div class="slider-card">
+        <div class="slider-header">
+          <span class="slider-label">Phosphorus (P)</span>
+          <span class="slider-value" id="p-display">42 <span class="slider-unit">kg/ha</span></span>
+        </div>
+        <input type="range" class="rec-slider" id="p-val" min="5" max="145" value="42"
+          oninput="updateSlider(this,'p-display','kg/ha')">
+        <div class="slider-minmax"><span>5</span><span>145 kg/ha</span></div>
+      </div>
+
+      <div class="slider-card">
+        <div class="slider-header">
+          <span class="slider-label">Potassium (K)</span>
+          <span class="slider-value" id="k-display">43 <span class="slider-unit">kg/ha</span></span>
+        </div>
+        <input type="range" class="rec-slider" id="k-val" min="5" max="205" value="43"
+          oninput="updateSlider(this,'k-display','kg/ha')">
+        <div class="slider-minmax"><span>5</span><span>205 kg/ha</span></div>
+      </div>
+
+      <div class="slider-card">
+        <div class="slider-header">
+          <span class="slider-label">Soil pH Level</span>
+          <span class="slider-value" id="ph-display">6.5 <span class="slider-unit">pH</span></span>
+        </div>
+        <input type="range" class="rec-slider" id="ph-val" min="3.5" max="9.9" step="0.1" value="6.5"
+          oninput="updateSlider(this,'ph-display','pH')">
+        <div class="slider-minmax"><span>3.5 Acidic</span><span>9.9 Alkaline</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Weather & Location ── -->
+  <div class="rec-section">
+    <div class="rec-section-title"><i class="fa fa-cloud-sun"></i> Weather &amp; Location Conditions</div>
+    <div class="sliders-grid" style="margin-bottom:1.1rem;">
+
+      <div class="slider-card">
+        <div class="slider-header">
+          <span class="slider-label">Temperature (°C)</span>
+          <span class="slider-value" id="temp-display">26 <span class="slider-unit">°C</span></span>
+        </div>
+        <input type="range" class="rec-slider yellow" id="temp-val" min="8" max="44" step="0.5" value="26"
+          oninput="updateSlider(this,'temp-display','°C')">
+        <div class="slider-minmax"><span>8°C</span><span>44°C</span></div>
+      </div>
+
+      <div class="slider-card">
+        <div class="slider-header">
+          <span class="slider-label">Humidity (%)</span>
+          <span class="slider-value" id="hum-display">80 <span class="slider-unit">%</span></span>
+        </div>
+        <input type="range" class="rec-slider blue" id="hum-val" min="14" max="100" value="80"
+          oninput="updateSlider(this,'hum-display','%')">
+        <div class="slider-minmax"><span>14%</span><span>100%</span></div>
+      </div>
+
+      <div class="slider-card">
+        <div class="slider-header">
+          <span class="slider-label">Rainfall (mm)</span>
+          <span class="slider-value" id="rain-display">180 <span class="slider-unit">mm</span></span>
+        </div>
+        <input type="range" class="rec-slider blue" id="rain-val" min="20" max="298" step="0.5" value="180"
+          oninput="updateSlider(this,'rain-display','mm')">
+        <div class="slider-minmax"><span>20 mm</span><span>298 mm</span></div>
+      </div>
+
+    </div>
+
+    <div class="dropdowns-row">
+      <div class="drop-group">
+        <label><i class="fa fa-calendar-alt"></i> Farming Season</label>
+        <select class="rec-select" id="season-val">
+          <option value="kharif">Kharif (Monsoon / June – Oct)</option>
+          <option value="rabi">Rabi (Winter / Nov – Apr)</option>
+          <option value="zaid">Zaid (Summer / Mar – Jun)</option>
+          <option value="perennial">Perennial / Year-round</option>
+        </select>
+      </div>
+      <div class="drop-group">
+        <label><i class="fa fa-layer-group"></i> Soil Type</label>
+        <select class="rec-select" id="soil-type-val">
+          <option value="alluvial">Alluvial Soil (जलोढ़)</option>
+          <option value="black">Black / Regur Soil (काली)</option>
+          <option value="red">Red &amp; Yellow Soil (लाल)</option>
+          <option value="laterite">Laterite Soil (लेटराइट)</option>
+          <option value="sandy">Sandy / Desert Soil (बलुई)</option>
+          <option value="loamy">Loamy Soil (दोमट)</option>
+          <option value="clay">Clay Soil (चिकनी)</option>
+        </select>
+      </div>
+      <div class="drop-group">
+        <label><i class="fa fa-tint"></i> Water Availability</label>
+        <select class="rec-select" id="water-val">
+          <option value="high">High (Canal / Continuous Drip)</option>
+          <option value="medium">Medium (Borewell / Seasonal)</option>
+          <option value="low">Low (Rainfed / Scarce)</option>
+          <option value="very-low">Very Low (Dryland Farming)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Analyze Button ── -->
+  <div class="analyze-btn-wrap">
+    <button class="analyze-btn" id="analyze-btn" onclick="runAnalysis()">
+      <span class="spinner" id="btn-spinner"></span>
+      <i class="fa fa-seedling" id="btn-icon"></i>
+      <span id="btn-label">✨ Analyze &amp; Recommend Best Crops</span>
+    </button>
+  </div>
+
+  <!-- ── Results ── -->
+  <div id="results-section" class="rec-section">
+    <div class="results-header">
+      <h2>🏆 Top Recommended Crops</h2>
+      <div class="top-pick-badge"><i class="fa fa-star"></i> AI Predicted</div>
+    </div>
+    <div class="input-summary" id="input-summary"></div>
+    <div class="results-grid" id="crop-results"></div>
+    <div style="margin-top:1rem;padding:.85rem 1.1rem;background:#f0faf6;border-radius:12px;font-size:.82rem;color:var(--dark);line-height:1.6;">
+      <strong style="color:var(--persian-green);">💡 AgriDrishti Insight:</strong>
+      The recommendation is based on your soil NPK values, pH, temperature, humidity, and rainfall patterns.
+      Always consult your local Krishi Vigyan Kendra (KVK) for region-specific seed varieties before sowing.
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── Crop Database ─────────────────────────────────────────── */
+const CROP_DB = {
+  rice:       { hindi:'चावल', img:'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400',
+                tags:['High Water','Kharif','₹₹₹'], yield:'40–60 q/ha',
+                days:'110–150',  msp:'₹2,183/q',
+                tip:'Requires flooded fields. Transplant 25-day old seedlings for best results.' },
+  maize:      { hindi:'मक्का', img:'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400',
+                tags:['Medium Water','Kharif/Rabi','₹₹'],   yield:'50–80 q/ha',
+                days:'80–110',   msp:'₹1,870/q',
+                tip:'Ensure proper drainage. Hybrid seeds yield up to 2x more than local varieties.' },
+  chickpea:   { hindi:'चना', img:'https://images.unsplash.com/photo-1515589656515-62bb821434c2?w=400',
+                tags:['Low Water','Rabi','₹₹₹'],           yield:'12–20 q/ha',
+                days:'90–120',   msp:'₹5,440/q',
+                tip:'Excellent for nitrogen fixation. Avoid waterlogged soils.' },
+  cotton:     { hindi:'कपास', img:'https://images.unsplash.com/photo-1563984951-d49c0fc54cff?w=400',
+                tags:['Medium Water','Kharif','₹₹₹₹'],      yield:'15–25 q/ha',
+                days:'160–200',  msp:'₹6,620/q',
+                tip:'Requires deep black soil. Apply Bt cotton variety for pest resistance.' },
+  wheat:      { hindi:'गेहूं', img:'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400',
+                tags:['Medium Water','Rabi','₹₹₹'],         yield:'45–65 q/ha',
+                days:'110–140',  msp:'₹2,275/q',
+                tip:'Sow between Nov 15–Dec 15 for maximum yield. Ideal pH 6–7.' },
+  sugarcane:  { hindi:'गन्ना', img:'https://images.unsplash.com/photo-1590494165264-1ebe3602eb80?w=400',
+                tags:['High Water','Perennial','₹₹₹₹'],     yield:'700–900 q/ha',
+                days:'300–365',  msp:'₹340/q',
+                tip:'Ratoon cropping saves input cost. Requires loamy to clay-loam soils.' },
+  mustard:    { hindi:'सरसों', img:'https://images.unsplash.com/photo-1614726365723-488102a9254d?w=400',
+                tags:['Low Water','Rabi','₹₹₹'],            yield:'12–18 q/ha',
+                days:'90–120',   msp:'₹5,650/q',
+                tip:'Tolerates light frost. Ideal for sandy loam soil with pH 6–7.5.' },
+  lentil:     { hindi:'मसूर', img:'https://images.unsplash.com/photo-1559817551-787db8c06e2e?w=400',
+                tags:['Low Water','Rabi','₹₹'],             yield:'8–14 q/ha',
+                days:'100–130',  msp:'₹6,000/q',
+                tip:'Great rotation crop after paddy. Fixes atmospheric nitrogen.' },
+  jute:       { hindi:'पटसन', img:'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400',
+                tags:['High Water','Kharif','₹₹'],          yield:'25–35 q/ha',
+                days:'100–120',  msp:'₹4,500/q',
+                tip:'Needs humid climate and well-drained loam soil.' },
+  kidneybeans:{ hindi:'राजमा', img:'https://images.unsplash.com/photo-1553531061-085e68344e23?w=400',
+                tags:['Medium Water','Kharif','₹₹₹'],       yield:'12–20 q/ha',
+                days:'90–110',   msp:'₹5,500/q',
+                tip:'Grows well at 1000–2000 m altitude. Avoid waterlogging.' },
+  mungbean:   { hindi:'मूंग', img:'https://images.unsplash.com/photo-1601648212108-724d26da7d92?w=400',
+                tags:['Low Water','Zaid','₹₹'],             yield:'8–12 q/ha',
+                days:'60–75',    msp:'₹8,682/q',
+                tip:'Short duration crop. Ideal for summer season rotation.' },
+  pigeonpeas: { hindi:'अरहर', img:'https://images.unsplash.com/photo-1588696803732-c51d6c8e31dc?w=400',
+                tags:['Low Water','Kharif','₹₹₹'],          yield:'10–18 q/ha',
+                days:'150–200',  msp:'₹7,000/q',
+                tip:'Drought tolerant. Intercrop with sorghum or maize for maximum land use.' },
+  mothbeans:  { hindi:'मोठ', img:'https://images.unsplash.com/photo-1621210452331-b8be568d4474?w=400',
+                tags:['Very Low Water','Kharif','₹₹'],      yield:'6–10 q/ha',
+                days:'75–90',    msp:'₹6,500/q',
+                tip:'Highly drought tolerant. Best for arid regions.' },
+  blackgram:  { hindi:'उड़द', img:'https://images.unsplash.com/photo-1542385262-bdae61c5b8e9?w=400',
+                tags:['Low Water','Kharif','₹₹₹'],          yield:'8–12 q/ha',
+                days:'65–80',    msp:'₹6,950/q',
+                tip:'Grows in sandy loam soil. Excellent intercrop with maize.' },
+  grapes:     { hindi:'अंगूर', img:'https://images.unsplash.com/photo-1596368708356-6e1e1025ee72?w=400',
+                tags:['Medium Water','Perennial','₹₹₹₹₹'],  yield:'200–250 q/ha',
+                days:'365',      msp:'Market linked',
+                tip:'Requires well-drained sandy-loam soil. Trellising is essential.' },
+  watermelon: { hindi:'तरबूज', img:'https://images.unsplash.com/photo-1587049352847-8d4e8941552e?w=400',
+                tags:['Medium Water','Zaid','₹₹₹'],         yield:'150–250 q/ha',
+                days:'70–90',    msp:'Market linked',
+                tip:'Needs warm dry climate. Sandy loam soil ideal.' },
+  muskmelon:  { hindi:'खरबूजा', img:'https://images.unsplash.com/photo-1571575173701-e6d2a1e92a36?w=400',
+                tags:['Medium Water','Zaid','₹₹₹'],         yield:'100–200 q/ha',
+                days:'75–90',    msp:'Market linked',
+                tip:'Requires light sandy soil and warm dry weather.' },
+  apple:      { hindi:'सेब', img:'https://images.unsplash.com/photo-1560806887-1e4cd0b6fac6?w=400',
+                tags:['High Water','Perennial','₹₹₹₹₹'],    yield:'100–200 q/ha',
+                days:'365',      msp:'Market linked',
+                tip:'Requires chilling hours in winter. Grows at altitude 1500–2700 m.' },
+  orange:     { hindi:'संतरा', img:'https://images.unsplash.com/photo-1611080626919-7cf5a9db4652?w=400',
+                tags:['Medium Water','Perennial','₹₹₹₹'],   yield:'80–150 q/ha',
+                days:'365',      msp:'Market linked',
+                tip:'Sandy loam to clay-loam soil. Requires subtropical climate.' },
+  mango:      { hindi:'आम', img:'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400',
+                tags:['Low Water','Perennial','₹₹₹₹'],      yield:'100–200 q/ha',
+                days:'365',      msp:'Market linked',
+                tip:'Tolerates drought after establishment. Deep well-drained soil preferred.' },
+  banana:     { hindi:'केला', img:'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=400',
+                tags:['High Water','Perennial','₹₹₹₹'],     yield:'250–400 q/ha',
+                days:'270–365',  msp:'Market linked',
+                tip:'Needs rich loamy soil and warm humid climate. Avoid frost.' },
+  papaya:     { hindi:'पपीता', img:'https://images.unsplash.com/photo-1617112848504-e35beec56dc5?w=400',
+                tags:['Medium Water','Perennial','₹₹₹'],    yield:'400–600 q/ha',
+                days:'240–300',  msp:'Market linked',
+                tip:'Fast-bearing fruit. Avoid waterlogging — ensure excellent drainage.' },
+  onion:      { hindi:'प्याज़', img:'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400',
+                tags:['Medium Water','Rabi/Kharif','₹₹₹'], yield:'150–250 q/ha',
+                days:'120–150',  msp:'Market linked',
+                tip:'Excellent for varying climates. Use drip irrigation.' },
+  potato:     { hindi:'आलू', img:'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400',
+                tags:['Medium Water','Rabi','₹₹₹'],         yield:'200–300 q/ha',
+                days:'90–120',   msp:'Market linked',
+                tip:'Plant in loose, well-draining soil to avoid tuber rot.' },
+  tomato:     { hindi:'टमाटर', img:'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400',
+                tags:['Medium Water','All Seasons','₹₹₹'],  yield:'250–400 q/ha',
+                days:'90–120',   msp:'Market linked',
+                tip:'Highly susceptible to blight, monitor moisture levels closely.' }
+};
+
+const RANKS = ['gold','silver','bronze','other','other'];
+const RANK_LABELS = ['#1 Best Match','#2 Runner Up','#3 Third Pick','#4','#5'];
+
+/* ── Slider Update ─────────────────────────────────────────── */
+function updateSlider(el, displayId, unit) {
+  const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
+  const pct = ((val - min) / (max - min) * 100).toFixed(1);
+  el.style.setProperty('--pct', pct + '%');
+  const v = Number.isInteger(val) ? val : parseFloat(val.toFixed(1));
+  document.getElementById(displayId).innerHTML = `${v} <span class="slider-unit">${unit}</span>`;
+}
+
+/* ── Initialize sliders ── */
+window.addEventListener('DOMContentLoaded', () => {
+  ['n-val','p-val','k-val','ph-val','temp-val','hum-val','rain-val'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      const map = {'n-val':'n-display','p-val':'p-display','k-val':'k-display','ph-val':'ph-display',
+                   'temp-val':'temp-display','hum-val':'hum-display','rain-val':'rain-display'};
+      const units = {'n-val':'kg/ha','p-val':'kg/ha','k-val':'kg/ha','ph-val':'pH',
+                     'temp-val':'°C','hum-val':'%','rain-val':'mm'};
+      updateSlider(el, map[id], units[id]);
+    }
+  });
+});
+
+/* ── Voice Input ─────────────────────────────────────────────── */
+let recognition = null, micActive = false;
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('Voice recognition not supported in this browser. Try Chrome.'); return;
+  }
+  if (micActive) { recognition?.stop(); return; }
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRec();
+  recognition.lang = 'en-IN'; recognition.continuous = false; recognition.interimResults = true;
+  recognition.onstart = () => {
+    micActive = true;
+    document.getElementById('mic-btn').classList.add('listening');
+    document.getElementById('mic-icon').className = 'fa fa-stop';
+    document.getElementById('mic-label').textContent = 'Stop';
+    const tr = document.getElementById('voice-transcript');
+    tr.style.display = 'block'; tr.textContent = '🎙️ Listening…';
+  };
+  recognition.onresult = e => {
+    let transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+    document.getElementById('voice-transcript').textContent = '📝 Heard: ' + transcript;
+    parseVoiceInput(transcript);
+  };
+  recognition.onend = () => {
+    micActive = false;
+    document.getElementById('mic-btn').classList.remove('listening');
+    document.getElementById('mic-icon').className = 'fa fa-microphone';
+    document.getElementById('mic-label').textContent = 'Speak Now';
+  };
+  recognition.start();
+}
+
+function parseVoiceInput(text) {
+  const t = text.toLowerCase();
+  const setSlider = (id, val, dispId, unit) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = Math.min(Math.max(val, parseFloat(el.min)), parseFloat(el.max));
+    updateSlider(el, dispId, unit);
+  };
+  const nm = t.match(/nitrogen\s*(\d+)/); if (nm) setSlider('n-val', nm[1], 'n-display', 'kg/ha');
+  const pm = t.match(/phosphorus\s*(\d+)/); if (pm) setSlider('p-val', pm[1], 'p-display', 'kg/ha');
+  const km = t.match(/potassium\s*(\d+)/); if (km) setSlider('k-val', km[1], 'k-display', 'kg/ha');
+  const phm = t.match(/ph\s*([\d.]+)/); if (phm) setSlider('ph-val', phm[1], 'ph-display', 'pH');
+  const tmp = t.match(/temperature\s*([\d.]+)/); if (tmp) setSlider('temp-val', tmp[1], 'temp-display', '°C');
+  const hum = t.match(/humidity\s*([\d.]+)/); if (hum) setSlider('hum-val', hum[1], 'hum-display', '%');
+  const rain = t.match(/rainfall\s*([\d.]+)/); if (rain) setSlider('rain-val', rain[1], 'rain-display', 'mm');
+  if (t.includes('kharif')) document.getElementById('season-val').value = 'kharif';
+  else if (t.includes('rabi')) document.getElementById('season-val').value = 'rabi';
+  else if (t.includes('zaid') || t.includes('summer')) document.getElementById('season-val').value = 'zaid';
+}
+
+/* ── Run Analysis ─────────────────────────────────────────── */
+async function runAnalysis() {
+  const btn = document.getElementById('analyze-btn');
+  const spinner = document.getElementById('btn-spinner');
+  const icon = document.getElementById('btn-icon');
+  const label = document.getElementById('btn-label');
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  icon.style.display = 'none';
+  label.textContent = 'Analyzing your soil & climate data…';
+
+  const data = {
+    N: parseFloat(document.getElementById('n-val').value),
+    P: parseFloat(document.getElementById('p-val').value),
+    K: parseFloat(document.getElementById('k-val').value),
+    temperature: parseFloat(document.getElementById('temp-val').value),
+    humidity: parseFloat(document.getElementById('hum-val').value),
+    ph: parseFloat(document.getElementById('ph-val').value),
+    rainfall: parseFloat(document.getElementById('rain-val').value)
+  };
+
+  try {
+    const res = await fetch('/api/recommend', {
+      method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    renderResults(result, data);
+  } catch (err) {
+    alert('AI model error. Please try again.'); console.error(err);
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    icon.style.display = '';
+    label.textContent = '✨ Analyze & Recommend Best Crops';
+  }
+}
+
+function renderResults(result, inputs) {
+  const section = document.getElementById('results-section');
+  const grid = document.getElementById('crop-results');
+  const summary = document.getElementById('input-summary');
+  section.style.display = 'block';
+  section.scrollIntoView({ behavior:'smooth', block:'start' });
+
+  // Input summary pills
+  summary.innerHTML = `<span>N: ${inputs.N} kg/ha</span><span>P: ${inputs.P} kg/ha</span>
+    <span>K: ${inputs.K} kg/ha</span><span>pH: ${inputs.ph}</span>
+    <span>Temp: ${inputs.temperature}°C</span><span>Humidity: ${inputs.humidity}%</span>
+    <span>Rain: ${inputs.rainfall} mm</span>`;
+
+  const crops = result.crops || [];
+  const probs = result.probabilities || [];
+  grid.innerHTML = '';
+
+  crops.slice(0, 5).forEach((cropName, idx) => {
+    const key = cropName.toLowerCase().replace(/\s+/g,'');
+    const db = CROP_DB[key] || CROP_DB[cropName.toLowerCase()] || {};
+    const conf = probs[idx] ? (probs[idx] * 100).toFixed(1) : (90 - idx * 8).toFixed(1);
+    const img = db.img || '/static/images/crops/wheat.jpg';
+    const hindi = db.hindi || cropName;
+    const tags = db.tags || ['—'];
+    const yld = db.yield || '—';
+    const days = db.days || '—';
+    const msp = db.msp || 'Market linked';
+    const tip = db.tip || 'Consult your local Krishi Vigyan Kendra for best practices.';
+    const rank = RANKS[idx] || 'other';
+    const rankLabel = RANK_LABELS[idx] || `#${idx+1}`;
+
+    const card = document.createElement('div');
+    card.className = `crop-card rank-${idx+1}`;
+    card.innerHTML = `
+      <div class="crop-img-wrap">
+        <img src="${img}" alt="${cropName}" loading="lazy"
+             onerror="this.src='/static/images/crops/wheat.jpg'">
+        <div class="rank-ribbon ${rank}">${rankLabel}</div>
+        <div class="conf-badge">🎯 ${conf}%</div>
+      </div>
+      <div class="crop-body">
+        <div class="crop-name">${cropName.charAt(0).toUpperCase()+cropName.slice(1)}</div>
+        <div class="crop-hindi">${hindi}</div>
+        <div class="conf-bar-wrap">
+          <div class="conf-bar-label"><span>AI Confidence</span><span>${conf}%</span></div>
+          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:0%" data-width="${conf}%"></div></div>
+        </div>
+        <div class="crop-tags">
+          ${tags.map(t => {
+            let cls = '';
+            if(t.includes('Water')||t.includes('Rain')) cls='water';
+            else if(t.includes('₹')) cls='roi';
+            else if(['Kharif','Rabi','Zaid','Perennial'].some(s=>t.includes(s))) cls='season';
+            return `<span class="crop-tag ${cls}">${t}</span>`;
+          }).join('')}
+        </div>
+        <div class="crop-stats-row">
+          <div class="crop-stat"><div class="crop-stat-val">${yld}</div><div class="crop-stat-lbl">Yield</div></div>
+          <div class="crop-stat"><div class="crop-stat-val">${days}d</div><div class="crop-stat-lbl">Duration</div></div>
+          <div class="crop-stat"><div class="crop-stat-val" style="font-size:.7rem">${msp}</div><div class="crop-stat-lbl">MSP</div></div>
+        </div>
+        <div style="margin-top:.75rem;padding:.6rem .75rem;background:#f0faf6;border-radius:10px;font-size:.73rem;color:#2d6a4f;line-height:1.5;">
+          💡 ${tip}
+        </div>
+      </div>`;
+    grid.appendChild(card);
+
+    // Animate confidence bar after render
+    setTimeout(() => {
+      const fill = card.querySelector('.conf-bar-fill');
+      if (fill) fill.style.width = fill.dataset.width;
+    }, 100 + idx * 80);
+  });
+}
+</script>
+{% endblock %}

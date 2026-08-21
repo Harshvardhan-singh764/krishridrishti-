@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block page_title %}AI Crop Scanner{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <div class="glass-panel">
+        <h3 style="color: var(--persian-green); margin-bottom: 1rem;">Upload Leaf Image</h3>
+        <p style="color: var(--gray); margin-bottom: 1rem;">Our AI model will analyze the leaf for diseases and provide treatment recommendations.</p>
+        
+        <label for="image-upload" style="display: block; border: 2px dashed var(--persian-green-light); border-radius: 8px; padding: 3rem; text-align: center; cursor: pointer; transition: background 0.3s;" onmouseover="this.style.background='rgba(27, 77, 62, 0.05)'" onmouseout="this.style.background='transparent'">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">📸</div>
+            <p>Drag and drop an image, or <b>click to browse</b></p>
+            <input type="file" id="image-upload" style="display: none;" accept="image/*" onchange="previewImage(event)">
+        </label>
+        
+        <div id="image-preview-container" style="display: none; margin-top: 1rem; text-align: center;">
+            <img id="image-preview" src="#" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+        </div>
+        
+        <button id="scan-btn" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;" onclick="runScan()" disabled>Scan with AI</button>
+    </div>
+
+    <div class="glass-panel" id="results-panel" style="opacity: 0.5; pointer-events: none; transition: opacity 0.5s;">
+        <h3 style="color: var(--persian-green); margin-bottom: 1rem;">Analysis Results</h3>
+        
+        <div style="text-align: center; padding: 2rem;" id="loading-state">
+            Waiting for image upload...
+        </div>
+        
+        <div id="results-state" style="display: none;">
+            <div class="metric-value" id="result-disease" style="color: var(--danger);">--</div>
+            <div class="metric-label" id="result-confidence">Confidence: --%</div>
+            
+            <hr style="border: 0; border-top: 1px solid var(--gray-light); margin: 1.5rem 0;">
+            
+            <h4 style="margin-bottom: 0.5rem;">Recommended Treatment:</h4>
+            <ul id="result-treatment" style="color: var(--dark); padding-left: 1.5rem;">
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let selectedFile = null;
+
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('image-preview').src = e.target.result;
+                document.getElementById('image-preview-container').style.display = 'block';
+                document.getElementById('scan-btn').disabled = false;
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async function runScan() {
+        if (!selectedFile) return;
+
+        const panel = document.getElementById('results-panel');
+        const loading = document.getElementById('loading-state');
+        const results = document.getElementById('results-state');
+        const btn = document.getElementById('scan-btn');
+        
+        panel.style.opacity = '1';
+        panel.style.pointerEvents = 'auto';
+        btn.disabled = true;
+        btn.innerHTML = 'Scanning...';
+        
+        loading.innerHTML = '<div style="color: var(--persian-green);"><b>Analyzing with Gemini AI...</b></div><p style="color:var(--gray); margin-top:10px;">Extracting features and matching against disease database.</p>';
+        results.style.display = 'none';
+        loading.style.display = 'block';
+        
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+
+        try {
+            const response = await fetch('/api/scan', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.error) {
+                loading.innerHTML = `<div style="color: var(--danger);"><b>Error:</b> ${data.error}</div>`;
+            } else {
+                document.getElementById('result-disease').textContent = data.disease;
+                document.getElementById('result-confidence').textContent = `Confidence: ${data.confidence}`;
+                
+                const treatmentList = document.getElementById('result-treatment');
+                treatmentList.innerHTML = '';
+                if (data.treatment && data.treatment.length > 0) {
+                    data.treatment.forEach(step => {
+                        const li = document.createElement('li');
+                        li.textContent = step;
+                        treatmentList.appendChild(li);
+                    });
+                }
+                
+                loading.style.display = 'none';
+                results.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Scan error:', error);
+            loading.innerHTML = `<div style="color: var(--danger);"><b>Error:</b> Failed to reach server.</div>`;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Scan with AI';
+        }
+    }
+</script>
+{% endblock %}
