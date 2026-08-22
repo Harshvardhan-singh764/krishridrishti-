@@ -11,6 +11,20 @@
     
     <div style="display: flex; flex-direction: column; gap: 1rem;">
         
+        {% if db_alerts %}
+            {% for alert in db_alerts %}
+            <div class="alert alert-{{ alert.severity }}" style="margin: 0; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>{{ alert.type }}:</strong> {{ alert.message }}
+                    <div style="font-size: 0.8rem; margin-top: 0.25rem;">{{ alert.created_at.strftime('%d %b %Y, %H:%M') }}</div>
+                </div>
+                {% if alert.action_plan %}
+                <a href="{{ alert.action_plan }}" class="btn btn-primary" style="padding: 0.25rem 1rem;">View Details</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% endif %}
+        
         <div class="alert alert-success" style="margin: 0; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #28a745;">
             <div>
                 <strong>💰 PM-Kisan Yojana:</strong> 15th Installment released. Complete your e-KYC by 31st August 2026.

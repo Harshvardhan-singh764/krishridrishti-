@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block page_title %}AI Crop Recommendation — AgriDrishti{% endblock %}
+{% block page_title %}AI Crop Recommendation — Krishi Drishti{% endblock %}
 
 {% block content %}
 <style>
@@ -274,6 +274,16 @@ input[type=range].rec-slider.blue::-webkit-slider-thumb  { background:#3b82f6; }
 
       <div class="slider-card">
         <div class="slider-header">
+          <span class="slider-label">Sulfur (S)</span>
+          <span class="slider-value" id="s-display">20 <span class="slider-unit">kg/ha</span></span>
+        </div>
+        <input type="range" class="rec-slider" id="s-val" min="0" max="100" value="20"
+          oninput="updateSlider(this,'s-display','kg/ha')">
+        <div class="slider-minmax"><span>0</span><span>100 kg/ha</span></div>
+      </div>
+
+      <div class="slider-card">
+        <div class="slider-header">
           <span class="slider-label">Soil pH Level</span>
           <span class="slider-value" id="ph-display">6.5 <span class="slider-unit">pH</span></span>
         </div>
@@ -368,13 +378,12 @@ input[type=range].rec-slider.blue::-webkit-slider-thumb  { background:#3b82f6; }
   <!-- ── Results ── -->
   <div id="results-section" class="rec-section">
     <div class="results-header">
-      <h2>🏆 Top Recommended Crops</h2>
-      <div class="top-pick-badge"><i class="fa fa-star"></i> AI Predicted</div>
+      <h2><i class="fa fa-trophy text-danger"></i> Top Recommended Crops</h2>
     </div>
     <div class="input-summary" id="input-summary"></div>
     <div class="results-grid" id="crop-results"></div>
     <div style="margin-top:1rem;padding:.85rem 1.1rem;background:#f0faf6;border-radius:12px;font-size:.82rem;color:var(--dark);line-height:1.6;">
-      <strong style="color:var(--persian-green);">💡 AgriDrishti Insight:</strong>
+      <strong style="color:var(--persian-green);">💡 Krishi Drishti Insight:</strong>
       The recommendation is based on your soil NPK values, pH, temperature, humidity, and rainfall patterns.
       Always consult your local Krishi Vigyan Kendra (KVK) for region-specific seed varieties before sowing.
     </div>
@@ -385,112 +394,7 @@ input[type=range].rec-slider.blue::-webkit-slider-thumb  { background:#3b82f6; }
 
 {% block scripts %}
 <script>
-/* ── Crop Database ─────────────────────────────────────────── */
-const CROP_DB = {
-  rice:       { hindi:'चावल', img:'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400',
-                tags:['High Water','Kharif','₹₹₹'], yield:'40–60 q/ha',
-                days:'110–150',  msp:'₹2,183/q',
-                tip:'Requires flooded fields. Transplant 25-day old seedlings for best results.' },
-  maize:      { hindi:'मक्का', img:'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400',
-                tags:['Medium Water','Kharif/Rabi','₹₹'],   yield:'50–80 q/ha',
-                days:'80–110',   msp:'₹1,870/q',
-                tip:'Ensure proper drainage. Hybrid seeds yield up to 2x more than local varieties.' },
-  chickpea:   { hindi:'चना', img:'https://images.unsplash.com/photo-1515589656515-62bb821434c2?w=400',
-                tags:['Low Water','Rabi','₹₹₹'],           yield:'12–20 q/ha',
-                days:'90–120',   msp:'₹5,440/q',
-                tip:'Excellent for nitrogen fixation. Avoid waterlogged soils.' },
-  cotton:     { hindi:'कपास', img:'https://images.unsplash.com/photo-1563984951-d49c0fc54cff?w=400',
-                tags:['Medium Water','Kharif','₹₹₹₹'],      yield:'15–25 q/ha',
-                days:'160–200',  msp:'₹6,620/q',
-                tip:'Requires deep black soil. Apply Bt cotton variety for pest resistance.' },
-  wheat:      { hindi:'गेहूं', img:'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400',
-                tags:['Medium Water','Rabi','₹₹₹'],         yield:'45–65 q/ha',
-                days:'110–140',  msp:'₹2,275/q',
-                tip:'Sow between Nov 15–Dec 15 for maximum yield. Ideal pH 6–7.' },
-  sugarcane:  { hindi:'गन्ना', img:'https://images.unsplash.com/photo-1590494165264-1ebe3602eb80?w=400',
-                tags:['High Water','Perennial','₹₹₹₹'],     yield:'700–900 q/ha',
-                days:'300–365',  msp:'₹340/q',
-                tip:'Ratoon cropping saves input cost. Requires loamy to clay-loam soils.' },
-  mustard:    { hindi:'सरसों', img:'https://images.unsplash.com/photo-1614726365723-488102a9254d?w=400',
-                tags:['Low Water','Rabi','₹₹₹'],            yield:'12–18 q/ha',
-                days:'90–120',   msp:'₹5,650/q',
-                tip:'Tolerates light frost. Ideal for sandy loam soil with pH 6–7.5.' },
-  lentil:     { hindi:'मसूर', img:'https://images.unsplash.com/photo-1559817551-787db8c06e2e?w=400',
-                tags:['Low Water','Rabi','₹₹'],             yield:'8–14 q/ha',
-                days:'100–130',  msp:'₹6,000/q',
-                tip:'Great rotation crop after paddy. Fixes atmospheric nitrogen.' },
-  jute:       { hindi:'पटसन', img:'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400',
-                tags:['High Water','Kharif','₹₹'],          yield:'25–35 q/ha',
-                days:'100–120',  msp:'₹4,500/q',
-                tip:'Needs humid climate and well-drained loam soil.' },
-  kidneybeans:{ hindi:'राजमा', img:'https://images.unsplash.com/photo-1553531061-085e68344e23?w=400',
-                tags:['Medium Water','Kharif','₹₹₹'],       yield:'12–20 q/ha',
-                days:'90–110',   msp:'₹5,500/q',
-                tip:'Grows well at 1000–2000 m altitude. Avoid waterlogging.' },
-  mungbean:   { hindi:'मूंग', img:'https://images.unsplash.com/photo-1601648212108-724d26da7d92?w=400',
-                tags:['Low Water','Zaid','₹₹'],             yield:'8–12 q/ha',
-                days:'60–75',    msp:'₹8,682/q',
-                tip:'Short duration crop. Ideal for summer season rotation.' },
-  pigeonpeas: { hindi:'अरहर', img:'https://images.unsplash.com/photo-1588696803732-c51d6c8e31dc?w=400',
-                tags:['Low Water','Kharif','₹₹₹'],          yield:'10–18 q/ha',
-                days:'150–200',  msp:'₹7,000/q',
-                tip:'Drought tolerant. Intercrop with sorghum or maize for maximum land use.' },
-  mothbeans:  { hindi:'मोठ', img:'https://images.unsplash.com/photo-1621210452331-b8be568d4474?w=400',
-                tags:['Very Low Water','Kharif','₹₹'],      yield:'6–10 q/ha',
-                days:'75–90',    msp:'₹6,500/q',
-                tip:'Highly drought tolerant. Best for arid regions.' },
-  blackgram:  { hindi:'उड़द', img:'https://images.unsplash.com/photo-1542385262-bdae61c5b8e9?w=400',
-                tags:['Low Water','Kharif','₹₹₹'],          yield:'8–12 q/ha',
-                days:'65–80',    msp:'₹6,950/q',
-                tip:'Grows in sandy loam soil. Excellent intercrop with maize.' },
-  grapes:     { hindi:'अंगूर', img:'https://images.unsplash.com/photo-1596368708356-6e1e1025ee72?w=400',
-                tags:['Medium Water','Perennial','₹₹₹₹₹'],  yield:'200–250 q/ha',
-                days:'365',      msp:'Market linked',
-                tip:'Requires well-drained sandy-loam soil. Trellising is essential.' },
-  watermelon: { hindi:'तरबूज', img:'https://images.unsplash.com/photo-1587049352847-8d4e8941552e?w=400',
-                tags:['Medium Water','Zaid','₹₹₹'],         yield:'150–250 q/ha',
-                days:'70–90',    msp:'Market linked',
-                tip:'Needs warm dry climate. Sandy loam soil ideal.' },
-  muskmelon:  { hindi:'खरबूजा', img:'https://images.unsplash.com/photo-1571575173701-e6d2a1e92a36?w=400',
-                tags:['Medium Water','Zaid','₹₹₹'],         yield:'100–200 q/ha',
-                days:'75–90',    msp:'Market linked',
-                tip:'Requires light sandy soil and warm dry weather.' },
-  apple:      { hindi:'सेब', img:'https://images.unsplash.com/photo-1560806887-1e4cd0b6fac6?w=400',
-                tags:['High Water','Perennial','₹₹₹₹₹'],    yield:'100–200 q/ha',
-                days:'365',      msp:'Market linked',
-                tip:'Requires chilling hours in winter. Grows at altitude 1500–2700 m.' },
-  orange:     { hindi:'संतरा', img:'https://images.unsplash.com/photo-1611080626919-7cf5a9db4652?w=400',
-                tags:['Medium Water','Perennial','₹₹₹₹'],   yield:'80–150 q/ha',
-                days:'365',      msp:'Market linked',
-                tip:'Sandy loam to clay-loam soil. Requires subtropical climate.' },
-  mango:      { hindi:'आम', img:'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400',
-                tags:['Low Water','Perennial','₹₹₹₹'],      yield:'100–200 q/ha',
-                days:'365',      msp:'Market linked',
-                tip:'Tolerates drought after establishment. Deep well-drained soil preferred.' },
-  banana:     { hindi:'केला', img:'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=400',
-                tags:['High Water','Perennial','₹₹₹₹'],     yield:'250–400 q/ha',
-                days:'270–365',  msp:'Market linked',
-                tip:'Needs rich loamy soil and warm humid climate. Avoid frost.' },
-  papaya:     { hindi:'पपीता', img:'https://images.unsplash.com/photo-1617112848504-e35beec56dc5?w=400',
-                tags:['Medium Water','Perennial','₹₹₹'],    yield:'400–600 q/ha',
-                days:'240–300',  msp:'Market linked',
-                tip:'Fast-bearing fruit. Avoid waterlogging — ensure excellent drainage.' },
-  onion:      { hindi:'प्याज़', img:'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400',
-                tags:['Medium Water','Rabi/Kharif','₹₹₹'], yield:'150–250 q/ha',
-                days:'120–150',  msp:'Market linked',
-                tip:'Excellent for varying climates. Use drip irrigation.' },
-  potato:     { hindi:'आलू', img:'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400',
-                tags:['Medium Water','Rabi','₹₹₹'],         yield:'200–300 q/ha',
-                days:'90–120',   msp:'Market linked',
-                tip:'Plant in loose, well-draining soil to avoid tuber rot.' },
-  tomato:     { hindi:'टमाटर', img:'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400',
-                tags:['Medium Water','All Seasons','₹₹₹'],  yield:'250–400 q/ha',
-                days:'90–120',   msp:'Market linked',
-                tip:'Highly susceptible to blight, monitor moisture levels closely.' }
-};
-
-const RANKS = ['gold','silver','bronze','other','other'];
-const RANK_LABELS = ['#1 Best Match','#2 Runner Up','#3 Third Pick','#4','#5'];
+// CROP_DB and RANKS removed because backend generates rich crop data dynamically
 
 /* ── Slider Update ─────────────────────────────────────────── */
 function updateSlider(el, displayId, unit) {
@@ -503,12 +407,12 @@ function updateSlider(el, displayId, unit) {
 
 /* ── Initialize sliders ── */
 window.addEventListener('DOMContentLoaded', () => {
-  ['n-val','p-val','k-val','ph-val','temp-val','hum-val','rain-val'].forEach(id => {
+  ['n-val','p-val','k-val','s-val','ph-val','temp-val','hum-val','rain-val'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      const map = {'n-val':'n-display','p-val':'p-display','k-val':'k-display','ph-val':'ph-display',
+      const map = {'n-val':'n-display','p-val':'p-display','k-val':'k-display','s-val':'s-display','ph-val':'ph-display',
                    'temp-val':'temp-display','hum-val':'hum-display','rain-val':'rain-display'};
-      const units = {'n-val':'kg/ha','p-val':'kg/ha','k-val':'kg/ha','ph-val':'pH',
+      const units = {'n-val':'kg/ha','p-val':'kg/ha','k-val':'kg/ha','s-val':'kg/ha','ph-val':'pH',
                      'temp-val':'°C','hum-val':'%','rain-val':'mm'};
       updateSlider(el, map[id], units[id]);
     }
@@ -583,6 +487,7 @@ async function runAnalysis() {
     N: parseFloat(document.getElementById('n-val').value),
     P: parseFloat(document.getElementById('p-val').value),
     K: parseFloat(document.getElementById('k-val').value),
+    S: parseFloat(document.getElementById('s-val').value),
     temperature: parseFloat(document.getElementById('temp-val').value),
     humidity: parseFloat(document.getElementById('hum-val').value),
     ph: parseFloat(document.getElementById('ph-val').value),
@@ -614,27 +519,33 @@ function renderResults(result, inputs) {
 
   // Input summary pills
   summary.innerHTML = `<span>N: ${inputs.N} kg/ha</span><span>P: ${inputs.P} kg/ha</span>
-    <span>K: ${inputs.K} kg/ha</span><span>pH: ${inputs.ph}</span>
+    <span>K: ${inputs.K} kg/ha</span><span>S: ${inputs.S} kg/ha</span><span>pH: ${inputs.ph}</span>
     <span>Temp: ${inputs.temperature}°C</span><span>Humidity: ${inputs.humidity}%</span>
     <span>Rain: ${inputs.rainfall} mm</span>`;
 
   const crops = result.crops || [];
-  const probs = result.probabilities || [];
   grid.innerHTML = '';
+  
+  if (crops.length === 0) {
+    grid.innerHTML = '<p>No recommendations found. Please adjust your parameters.</p>';
+    return;
+  }
 
-  crops.slice(0, 5).forEach((cropName, idx) => {
-    const key = cropName.toLowerCase().replace(/\s+/g,'');
-    const db = CROP_DB[key] || CROP_DB[cropName.toLowerCase()] || {};
-    const conf = probs[idx] ? (probs[idx] * 100).toFixed(1) : (90 - idx * 8).toFixed(1);
-    const img = db.img || '/static/images/crops/wheat.jpg';
-    const hindi = db.hindi || cropName;
-    const tags = db.tags || ['—'];
-    const yld = db.yield || '—';
-    const days = db.days || '—';
-    const msp = db.msp || 'Market linked';
-    const tip = db.tip || 'Consult your local Krishi Vigyan Kendra for best practices.';
+  const RANKS = ['gold','silver','bronze','other','other'];
+  const RANK_LABELS = ['#1 Best Match','#2 Runner Up','#3 Third Pick','#4','#5'];
+
+  crops.forEach((crop, idx) => {
+    const conf = crop.probability ? (crop.probability * 100).toFixed(1) : (90 - idx * 8).toFixed(1);
+    const img = crop.img || '/static/images/crops/wheat.jpg';
+    const hindi = crop.hindi || crop.name;
+    const tags = crop.tags || ['—'];
+    const yld = crop.yield || '—';
+    const days = crop.days || '—';
+    const msp = crop.msp || 'Market linked';
+    const tip = crop.tip || 'Consult your local Krishi Vigyan Kendra for best practices.';
     const rank = RANKS[idx] || 'other';
     const rankLabel = RANK_LABELS[idx] || `#${idx+1}`;
+    const cropName = crop.name || 'Unknown';
 
     const card = document.createElement('div');
     card.className = `crop-card rank-${idx+1}`;
@@ -656,14 +567,14 @@ function renderResults(result, inputs) {
           ${tags.map(t => {
             let cls = '';
             if(t.includes('Water')||t.includes('Rain')) cls='water';
-            else if(t.includes('₹')) cls='roi';
+            else if(t.includes('₹') || t.includes('ROI')) cls='roi';
             else if(['Kharif','Rabi','Zaid','Perennial'].some(s=>t.includes(s))) cls='season';
             return `<span class="crop-tag ${cls}">${t}</span>`;
           }).join('')}
         </div>
         <div class="crop-stats-row">
-          <div class="crop-stat"><div class="crop-stat-val">${yld}</div><div class="crop-stat-lbl">Yield</div></div>
-          <div class="crop-stat"><div class="crop-stat-val">${days}d</div><div class="crop-stat-lbl">Duration</div></div>
+          <div class="crop-stat"><div class="crop-stat-val" style="font-size:.8rem">${yld}</div><div class="crop-stat-lbl">Yield</div></div>
+          <div class="crop-stat"><div class="crop-stat-val" style="font-size:.8rem">${days}</div><div class="crop-stat-lbl">Duration</div></div>
           <div class="crop-stat"><div class="crop-stat-val" style="font-size:.7rem">${msp}</div><div class="crop-stat-lbl">MSP</div></div>
         </div>
         <div style="margin-top:.75rem;padding:.6rem .75rem;background:#f0faf6;border-radius:10px;font-size:.73rem;color:#2d6a4f;line-height:1.5;">

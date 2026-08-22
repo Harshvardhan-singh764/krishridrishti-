@@ -372,7 +372,7 @@ function initMap(lat,lon){
   const dc=new L.Control.Draw({draw:{polygon:{allowIntersection:false,showArea:true,metric:true,shapeOptions:{color:'#1B4D3E',fillColor:'#27AE60',fillOpacity:0.22,weight:3}},rectangle:{shapeOptions:{color:'#1B4D3E',fillColor:'#27AE60',fillOpacity:0.22,weight:3}},polyline:false,circle:false,circlemarker:false,marker:false},edit:{featureGroup:drawnItems}});
   map.addControl(dc);
   map.on(L.Draw.Event.CREATED,e=>{drawnItems.clearLayers();drawnItems.addLayer(e.layer);document.getElementById('draw-hint').style.display='none';document.getElementById('btn-draw').innerHTML='<i class="fa fa-check-circle"></i> Farm Marked!';document.getElementById('btn-draw').style.background='var(--success)';const lls=e.layer.getLatLngs?e.layer.getLatLngs()[0]:[];const aM2=L.GeometryUtil?L.GeometryUtil.geodesicArea(lls):0;document.getElementById('farm-info').innerHTML=`<table style="width:100%;font-size:0.8rem;"><tr><td style="color:var(--gray);padding:0.25rem 0;">Area (Acres)</td><td style="font-weight:700;color:var(--persian-green);">${(aM2/4047).toFixed(2)} ac</td></tr><tr><td style="color:var(--gray);padding:0.25rem 0;">Area (Hectares)</td><td style="font-weight:700;">${(aM2/10000).toFixed(2)} ha</td></tr><tr><td colspan="2" style="padding-top:0.4rem;"><button class="btn btn-primary" style="width:100%;font-size:0.78rem;padding:0.4rem;" onclick="saveFarm()"><i class="fa fa-save"></i> Save Farm</button></td></tr></table>`;});
-  try{const s=localStorage.getItem('agridrishti_farm');if(s)L.geoJSON(JSON.parse(s),{style:{color:'#1B4D3E',fillColor:'#27AE60',fillOpacity:0.22,weight:3}}).addTo(drawnItems);}catch(_){}
+  try{const s=localStorage.getItem('Krishi Drishti_farm');if(s)L.geoJSON(JSON.parse(s),{style:{color:'#1B4D3E',fillColor:'#27AE60',fillOpacity:0.22,weight:3}}).addTo(drawnItems);}catch(_){}
   fetchNearbyPlaces(lat,lon);
   setTimeout(()=>map.invalidateSize(),300);
 }
@@ -389,7 +389,7 @@ function getDir(lat,lon){window.open('https://www.google.com/maps/dir/?api=1&des
 function toggleLayer(type,btn){activeLayers[type]=!activeLayers[type];btn.classList.toggle('active');activeLayers[type]?layerGroups[type].addTo(map):layerGroups[type].remove();renderList();}
 function startFarmDraw(){new L.Draw.Polygon(map,{allowIntersection:false,showArea:true,shapeOptions:{color:'#1B4D3E',fillColor:'#27AE60',fillOpacity:0.22,weight:3}}).enable();document.getElementById('draw-hint').style.display='block';document.getElementById('btn-draw').innerHTML='<i class="fa fa-pencil"></i> Drawing\u2026';document.getElementById('btn-draw').style.background='var(--warning)';document.getElementById('btn-draw').style.color='white';}
 function clearFarm(){drawnItems.clearLayers();document.getElementById('btn-draw').innerHTML='<i class="fa fa-draw-polygon"></i> Mark My Farm';document.getElementById('btn-draw').style.background='var(--persian-green)';document.getElementById('btn-draw').style.color='white';document.getElementById('farm-info').textContent='No farm marked yet. Click "Mark My Farm" to draw your field boundary.';}
-function saveFarm(){localStorage.setItem('agridrishti_farm',JSON.stringify(drawnItems.toGeoJSON()));alert('Farm area saved! \u2705');}
+function saveFarm(){localStorage.setItem('Krishi Drishti_farm',JSON.stringify(drawnItems.toGeoJSON()));alert('Farm area saved! \u2705');}
 function locateMe(){if(userLat&&userLon){map.flyTo([userLat,userLon],14,{duration:1.4});userMarker?.openPopup();}}
 document.addEventListener('DOMContentLoaded',()=>{loadWeather();});
 </script>

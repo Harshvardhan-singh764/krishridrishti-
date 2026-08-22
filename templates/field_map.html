@@ -371,7 +371,7 @@ function initMap(lat, lon) {
 
   // Restore saved farm
   try {
-    const saved = localStorage.getItem('agridrishti_farm');
+    const saved = localStorage.getItem('Krishi Drishti_farm');
     if (saved) L.geoJSON(JSON.parse(saved), {
       style:{color:'#1B4D3E', fillColor:'#27AE60', fillOpacity:0.22, weight:3}
     }).addTo(drawnItems);
@@ -509,7 +509,7 @@ function clearFarm(){
   document.getElementById('farm-info').textContent='No farm marked yet. Click "Mark My Farm" to draw your field boundary.';
 }
 function saveFarm(){
-  localStorage.setItem('agridrishti_farm',JSON.stringify(drawnItems.toGeoJSON()));
+  localStorage.setItem('Krishi Drishti_farm',JSON.stringify(drawnItems.toGeoJSON()));
   alert('Farm area saved! ✅');
 }
 function locateMe(){ if(userLat&&userLon){ map.flyTo([userLat,userLon],14,{duration:1.4}); userMarker.openPopup(); } }

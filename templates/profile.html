@@ -40,19 +40,53 @@
         font-weight: bold;
         box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         border: 4px solid rgba(255,255,255,0.2);
+        position: relative;
+    }
+    .profile-avatar .badge {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: #FFC107;
+        color: #333;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        border: 2px solid white;
     }
     .profile-info h2 {
         font-family: 'Montserrat', sans-serif;
-        font-size: 2rem;
+        font-size: 2.2rem;
         margin: 0 0 0.25rem 0;
     }
     .profile-info p {
         margin: 0;
-        opacity: 0.85;
-        font-size: 1rem;
+        opacity: 0.9;
+        font-size: 1.05rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+    }
+    .badges-row {
+        margin-top: 1.2rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .badge-pill {
+        background: rgba(255,255,255,0.2);
+        padding: 0.5rem 1.2rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        backdrop-filter: blur(5px);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid rgba(255,255,255,0.1);
     }
     .profile-grid {
         display: grid;
@@ -70,197 +104,175 @@
         color: var(--gray);
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-bottom: 0.25rem;
-        font-weight: 600;
+        margin-bottom: 0.35rem;
+        font-weight: 700;
     }
     .info-value {
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         font-weight: 600;
         color: var(--dark);
     }
-    .device-card {
-        background: #f8fbfa;
-        border: 1px solid #e2f0e9;
-        border-radius: 10px;
-        padding: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+    .prof-card {
+        border: 1px solid var(--gray-light);
+        border-radius: 12px;
+        padding: 1.2rem;
+        background: #fff;
         margin-bottom: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
-    .device-icon {
-        font-size: 1.8rem;
-        color: var(--persian-green);
-        background: white;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
+    .prof-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .prof-card-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--dark);
         display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
     }
-    .status-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        display: inline-block;
-    }
-    .status-online { background: #28a745; box-shadow: 0 0 8px rgba(40,167,69,0.5); }
-    .status-offline { background: #dc3545; }
-    .log-item {
-        display: flex;
-        gap: 1rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--gray-light);
-    }
-    .log-item:last-child { border-bottom: none; }
-    .log-time {
-        font-size: 0.85rem;
+    .prof-card-meta {
+        font-size: 0.9rem;
         color: var(--gray);
-        white-space: nowrap;
-        width: 80px;
     }
 </style>
 
 <div class="profile-header">
     <div class="profile-avatar">
-        D
+        R
+        <div class="badge" title="Certified Organic Farmer"><i class="fa fa-certificate"></i></div>
     </div>
     <div class="profile-info">
-        <h2>Demo Farmer</h2>
-        <p><i class="fa fa-map-marker-alt"></i> Ludhiana, Punjab, India</p>
-        <div style="margin-top: 1rem; display: flex; gap: 1rem;">
-            <span style="background: rgba(255,255,255,0.2); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; backdrop-filter: blur(5px);">
-                <i class="fa fa-id-card"></i> Kissan ID: 9823-4412-10
+        <h2>Ramesh Kumar</h2>
+        <p><i class="fa fa-map-marker-alt"></i> Ludhiana, Punjab &bull; Farmer Since 2010</p>
+        <div class="badges-row">
+            <span class="badge-pill">
+                <i class="fa fa-id-card"></i> KCC ID: 9823-4412-10
             </span>
-            <span style="background: rgba(255,255,255,0.2); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; backdrop-filter: blur(5px);">
-                <i class="fa fa-star"></i> Premium Member
+            <span class="badge-pill">
+                <i class="fa fa-leaf"></i> Organic Certified
+            </span>
+            <span class="badge-pill">
+                <i class="fa fa-users"></i> FPO Member: Punjab Agro
             </span>
         </div>
     </div>
 </div>
 
 <div class="profile-grid">
-    <!-- Left Column -->
+    <!-- Left Column: Personal & Financials -->
     <div>
         <div class="glass-panel" style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="color: var(--persian-green); margin: 0;"><i class="fa fa-user"></i> Personal Info</h3>
-                <button class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;"><i class="fa fa-edit"></i> Edit</button>
+                <h3 style="color: var(--persian-green); margin: 0;"><i class="fa fa-user-shield"></i> Official Details</h3>
+                <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;"><i class="fa fa-edit"></i> Edit</button>
             </div>
             
             <div class="info-group">
-                <div class="info-label">Phone Number</div>
-                <div class="info-value">+91 98765 43210</div>
+                <div class="info-label">Aadhar Number (Linked)</div>
+                <div class="info-value">XXXX-XXXX-9012 <i class="fa fa-check-circle" style="color: #28a745; font-size: 1rem;"></i></div>
             </div>
             <div class="info-group">
-                <div class="info-label">Email Address</div>
-                <div class="info-value">demo@agridrishti.com</div>
+                <div class="info-label">Soil Health Card No.</div>
+                <div class="info-value">SHC-PB-LUD-2025</div>
             </div>
             <div class="info-group">
-                <div class="info-label">Preferred Language</div>
-                <div class="info-value">Punjabi / English</div>
+                <div class="info-label">PM-Kisan Beneficiary</div>
+                <div class="info-value">Active (Installment 15 Received)</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Primary Bank Account</div>
+                <div class="info-value">State Bank of India (SBI) <br><span style="font-size: 0.9rem; color: var(--gray);">A/C ending in 4410</span></div>
             </div>
         </div>
 
         <div class="glass-panel">
-            <h3 style="color: var(--persian-green); margin-bottom: 1.5rem;"><i class="fa fa-wifi"></i> Connected IoT Devices</h3>
+            <h3 style="color: var(--persian-green); margin-bottom: 1.5rem;"><i class="fa fa-tractor"></i> Machinery & Assets</h3>
             
-            <div class="device-card">
-                <div class="device-icon"><i class="fa fa-microchip"></i></div>
-                <div style="flex-grow: 1;">
-                    <div style="font-weight: 700; color: var(--dark);">Smart Soil Sensor A1</div>
-                    <div style="font-size: 0.8rem; color: var(--gray);">Zone A (Tomato Field)</div>
-                </div>
-                <div style="text-align: right;">
-                    <div class="status-dot status-online"></div>
-                    <div style="font-size: 0.75rem; font-weight: 600; color: #28a745; margin-top: 0.2rem;">Online</div>
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid #e2f0e9; border-radius: 8px; margin-bottom: 1rem; background: #f8fbfa;">
+                <i class="fa fa-tractor" style="font-size: 2rem; color: var(--persian-green);"></i>
+                <div>
+                    <div style="font-weight: bold; color: var(--dark);">Mahindra 575 DI</div>
+                    <div style="font-size: 0.85rem; color: var(--gray);">Registered 2019 &bull; Self-owned</div>
                 </div>
             </div>
-            
-            <div class="device-card">
-                <div class="device-icon"><i class="fa fa-tint"></i></div>
-                <div style="flex-grow: 1;">
-                    <div style="font-weight: 700; color: var(--dark);">Auto Pump Controller</div>
-                    <div style="font-size: 0.8rem; color: var(--gray);">Main Water Line</div>
-                </div>
-                <div style="text-align: right;">
-                    <div class="status-dot status-online"></div>
-                    <div style="font-size: 0.75rem; font-weight: 600; color: #28a745; margin-top: 0.2rem;">Online</div>
+
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid #e2f0e9; border-radius: 8px; background: #f8fbfa;">
+                <i class="fa fa-truck-pickup" style="font-size: 2rem; color: var(--persian-green);"></i>
+                <div>
+                    <div style="font-weight: bold; color: var(--dark);">Borewell Submersible</div>
+                    <div style="font-size: 0.85rem; color: var(--gray);">7.5 HP &bull; Serviced 2 mos ago</div>
                 </div>
             </div>
-            
-            <button class="btn" style="width: 100%; border: 1px dashed var(--persian-green); background: transparent; color: var(--persian-green);"><i class="fa fa-plus"></i> Add New Device</button>
         </div>
     </div>
 
-    <!-- Right Column -->
+    <!-- Right Column: Farm Profile & History -->
     <div>
         <div class="glass-panel" style="margin-bottom: 1.5rem;">
-            <h3 style="color: var(--persian-green); margin-bottom: 1.5rem;"><i class="fa fa-map-marked-alt"></i> Farm Profile</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="color: var(--persian-green); margin: 0;"><i class="fa fa-map-marked-alt"></i> Agricultural Portfolio</h3>
+                <span style="background: var(--persian-green-light); color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">12.5 Acres Total</span>
+            </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-                <div style="background: var(--persian-green-bg); padding: 1rem; border-radius: 10px; text-align: center;">
-                    <div class="info-label">Total Area</div>
-                    <div class="info-value" style="font-size: 1.5rem; color: var(--persian-green);">12.5 <span style="font-size: 1rem;">Acres</span></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div style="background: var(--off-white); padding: 1rem; border-radius: 10px; border-left: 4px solid var(--persian-green);">
+                    <div class="info-label">Annual Yield (Last Yr)</div>
+                    <div class="info-value" style="font-size: 1.4rem;">4,850 <span style="font-size: 0.9rem;">Quintals</span></div>
                 </div>
-                <div style="background: var(--persian-green-bg); padding: 1rem; border-radius: 10px; text-align: center;">
-                    <div class="info-label">Soil Type</div>
-                    <div class="info-value" style="font-size: 1.2rem; color: var(--persian-green); margin-top: 0.4rem;">Alluvial</div>
+                <div style="background: var(--off-white); padding: 1rem; border-radius: 10px; border-left: 4px solid #1976d2;">
+                    <div class="info-label">Irrigation Type</div>
+                    <div class="info-value" style="font-size: 1.4rem;">Drip & Canal</div>
                 </div>
-                <div style="background: var(--persian-green-bg); padding: 1rem; border-radius: 10px; text-align: center;">
-                    <div class="info-label">Water Source</div>
-                    <div class="info-value" style="font-size: 1.2rem; color: var(--persian-green); margin-top: 0.4rem;">Canal / Tube</div>
+                <div style="background: var(--off-white); padding: 1rem; border-radius: 10px; border-left: 4px solid #f57c00;">
+                    <div class="info-label">Primary Soil</div>
+                    <div class="info-value" style="font-size: 1.4rem;">Alluvial</div>
                 </div>
             </div>
             
-            <h4 style="margin-bottom: 1rem; color: var(--dark);">Current Crop Cycles</h4>
+            <h4 style="margin-bottom: 1rem; color: var(--dark);">Current Crop Season (Rabi)</h4>
             
-            <div style="border: 1px solid var(--gray-light); border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <span style="font-weight: 700; font-size: 1.1rem;">🌾 Sharbati Wheat</span>
-                    <span style="background: #e3f2fd; color: #1976d2; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Day 45 (Vegetative)</span>
+            <div class="prof-card">
+                <div class="prof-card-title">
+                    <span>🌾 Sharbati Wheat (Premium)</span>
+                    <span style="color: #1976d2; font-size: 0.9rem;"><i class="fa fa-sync fa-spin"></i> Day 45 (Vegetative)</span>
                 </div>
-                <div style="width: 100%; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
+                <div class="prof-card-meta" style="margin-bottom: 0.8rem;">Area: 8.0 Acres &bull; Expected Harvest: Mid April</div>
+                <div style="width: 100%; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
                     <div style="width: 35%; background: #1976d2; height: 100%;"></div>
                 </div>
-                <div style="font-size: 0.85rem; color: var(--gray); text-align: right;">Estimated Harvest: Mid April</div>
             </div>
             
-            <div style="border: 1px solid var(--gray-light); border-radius: 10px; padding: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <span style="font-weight: 700; font-size: 1.1rem;">🍅 Hybrid Tomatoes</span>
-                    <span style="background: #e8f5e9; color: #2e7d32; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Day 72 (Fruiting)</span>
+            <div class="prof-card">
+                <div class="prof-card-title">
+                    <span>🌱 Mustard (Pusa Double Zero)</span>
+                    <span style="color: #2e7d32; font-size: 0.9rem;"><i class="fa fa-sync fa-spin"></i> Day 60 (Flowering)</span>
                 </div>
-                <div style="width: 100%; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
-                    <div style="width: 65%; background: #2e7d32; height: 100%;"></div>
+                <div class="prof-card-meta" style="margin-bottom: 0.8rem;">Area: 4.5 Acres &bull; Expected Harvest: Late March</div>
+                <div style="width: 100%; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="width: 55%; background: #2e7d32; height: 100%;"></div>
                 </div>
-                <div style="font-size: 0.85rem; color: var(--gray); text-align: right;">Estimated Harvest: Late March</div>
             </div>
         </div>
         
         <div class="glass-panel">
-            <h3 style="color: var(--persian-green); margin-bottom: 1rem;"><i class="fa fa-history"></i> Recent Activity Log</h3>
-            <div class="log-item">
-                <div class="log-time">Today, 08:30 AM</div>
-                <div>
-                    <strong>AI Scan Performed</strong><br>
-                    <span style="font-size: 0.85rem; color: var(--gray);">Scanned tomato leaf. Detected Early Blight (94%).</span>
+            <h3 style="color: var(--persian-green); margin-bottom: 1rem;"><i class="fa fa-history"></i> Recent AI & Platform Activity</h3>
+            <div style="border-left: 2px solid var(--persian-green-light); padding-left: 1.5rem; margin-left: 0.5rem;">
+                <div style="margin-bottom: 1.5rem; position: relative;">
+                    <i class="fa fa-camera" style="position: absolute; left: -2.3rem; top: 0; background: white; color: var(--persian-green); font-size: 1.2rem; border-radius: 50%;"></i>
+                    <div style="font-weight: 600;">Crop Health Scan</div>
+                    <div style="font-size: 0.9rem; color: var(--gray);">Analyzed wheat leaves. No diseases detected. (Today, 08:30 AM)</div>
                 </div>
-            </div>
-            <div class="log-item">
-                <div class="log-time">Yesterday, 18:45</div>
-                <div>
-                    <strong>Irrigation Auto-Paused</strong><br>
-                    <span style="font-size: 0.85rem; color: var(--gray);">Zone B irrigation paused due to high moisture prediction.</span>
+                <div style="margin-bottom: 1.5rem; position: relative;">
+                    <i class="fa fa-shopping-cart" style="position: absolute; left: -2.3rem; top: 0; background: white; color: var(--persian-green); font-size: 1.2rem; border-radius: 50%;"></i>
+                    <div style="font-weight: 600;">Purchased Fertilizer via Agri Store</div>
+                    <div style="font-size: 0.9rem; color: var(--gray);">Bought 2 bags of Organic NPK. Delivery pending. (Yesterday)</div>
                 </div>
-            </div>
-            <div class="log-item">
-                <div class="log-time">12 Aug, 10:15 AM</div>
-                <div>
-                    <strong>Agri Store Purchase</strong><br>
-                    <span style="font-size: 0.85rem; color: var(--gray);">Ordered 2 bags of NPK 19:19:19.</span>
+                <div style="position: relative;">
+                    <i class="fa fa-file-contract" style="position: absolute; left: -2.3rem; top: 0; background: white; color: var(--persian-green); font-size: 1.2rem; border-radius: 50%;"></i>
+                    <div style="font-weight: 600;">PM-Kisan eKYC Updated</div>
+                    <div style="font-size: 0.9rem; color: var(--gray);">Successfully verified Aadhar details for upcoming scheme benefits. (12 Aug)</div>
                 </div>
             </div>
         </div>

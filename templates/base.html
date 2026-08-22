@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgriDrishti AI Platform</title>
+    <title>Krishi Drishti Platform</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='js/localization.js') }}"></script>
 </head>
 <body>
     <div class="app-container">
@@ -18,23 +17,24 @@
             <div>
                 <div class="brand">
                     <i class="fa fa-seedling" style="color: var(--persian-green); font-size: 2rem;"></i>
-                    <span>AgriDrishti AI</span>
+                    <span>Krishi Drishti</span>
                 </div>
                 <ul class="nav-links">
                     <li><a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}" data-i18n="nav_dashboard"><i class="fa fa-tachometer-alt"></i> Dashboard</a></li>
                     <li><a href="/scanner" class="{% if request.path == '/scanner' %}active{% endif %}" data-i18n="nav_scanner"><i class="fa fa-camera"></i> AI Crop Scanner</a></li>
                     <li><a href="/recommendations" class="{% if request.path == '/recommendations' %}active{% endif %}" data-i18n="nav_recommendations"><i class="fa fa-seedling"></i> Crop Recommendations</a></li>
                     <li><a href="/weather" class="{% if request.path == '/weather' or request.path == '/map' or request.path == '/field_map' %}active{% endif %}"><i class="fa fa-cloud-sun-rain"></i> Weather &amp; Map</a></li>
-                    <li><a href="/irrigation" class="{% if request.path == '/irrigation' %}active{% endif %}" data-i18n="nav_irrigation"><i class="fa fa-tint"></i> Smart Irrigation</a></li>
+
                     <li><a href="/alerts" class="{% if request.path == '/alerts' %}active{% endif %}" data-i18n="nav_alerts"><i class="fa fa-bell"></i> Alert Center</a></li>
                     <li><a href="/store" class="{% if request.path == '/store' %}active{% endif %}" data-i18n="nav_store"><i class="fa fa-store"></i> Agri Store</a></li>
                     <li><a href="/mandi" class="{% if request.path == '/mandi' %}active{% endif %}" data-i18n="nav_mandi"><i class="fa fa-chart-bar"></i> Mandi Rates</a></li>
                     <li><a href="/yojanas" class="{% if request.path == '/yojanas' %}active{% endif %}"><i class="fa fa-hand-holding-usd"></i> PM Yojanas</a></li>
+                    <li><a href="/settings" class="{% if request.path == '/settings' %}active{% endif %}"><i class="fa fa-cog"></i> Settings</a></li>
                 </ul>
             </div>
             
             <div class="sidebar-footer" style="margin-top: auto;">
-                <a href="/" class="btn btn-primary" style="display: block; text-align: center; background: var(--danger); text-decoration: none;" data-i18n="nav_logout"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                <a href="/logout" class="btn btn-primary" style="display: block; text-align: center; background: var(--danger); text-decoration: none; padding: 0.5rem 1rem; font-size: 0.85rem; width: 80%; margin: 0 auto;" data-i18n="nav_logout"><i class="fa fa-sign-out-alt"></i> Logout</a>
             </div>
         </nav>
 
@@ -43,12 +43,13 @@
             <div class="topbar">
                 <h2>{% block page_title %}Dashboard{% endblock %}</h2>
                 <div class="user-info" style="display: flex; align-items: center; gap: 1rem;">
-                    <select id="language-select" class="form-control" style="width: auto;" onchange="changeLanguage(this.value)">
-                        <option value="en">English</option>
-                        <option value="hi">हिंदी (Hindi)</option>
-                        <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
-                        <option value="mr">मराठी (Marathi)</option>
-                    </select>
+                    <div id="google_translate_element" style="display:inline-block; margin-right: 1rem;"></div>
+                    <script type="text/javascript">
+                    function googleTranslateElementInit() {
+                      new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,hi,pa,mr,bn,gu,ta,te', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+                    }
+                    </script>
+                    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
                     <span id="connection-status" style="color: var(--warning);" data-i18n="lbl_connecting">● Connecting...</span>
                     <!-- Cart Icon -->
                     <div class="cart-widget" style="position: relative;">
@@ -89,7 +90,7 @@
         <div id="chat-window" style="display: none; width: 370px; height: 480px; background: var(--white); border-radius: 16px; box-shadow: var(--shadow-lg); border: 1px solid var(--gray-light); display: flex; flex-direction: column; margin-bottom: 15px; overflow: hidden; transition: all 0.3s ease;">
             <div style="background: linear-gradient(135deg, var(--persian-green), var(--persian-green-light)); color: var(--white); padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h4 style="margin: 0; font-family: 'Montserrat', sans-serif;">🤖 AgriDrishti Assistant</h4>
+                    <h4 style="margin: 0; font-family: 'Montserrat', sans-serif;">🤖 Krishi Drishti Assistant</h4>
                     <small style="opacity:0.85; font-size:0.72rem;">✨ Powered by Google Gemini AI</small>
                 </div>
                 <button onclick="toggleChat()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">&times;</button>
@@ -257,7 +258,7 @@
             chatBox.innerHTML += `
                 <div id="${typingId}" style="margin-bottom: 1rem; text-align: left;">
                     <div style="display: inline-block; background: var(--gray-light); color: var(--dark); padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.9rem; font-style: italic;">
-                        <span class="typing-dots">AgriDrishti is thinking</span>
+                        <span class="typing-dots">Krishi Drishti is thinking</span>
                     </div>
                 </div>
             `;
@@ -271,7 +272,7 @@
                 });
                 const data = await response.json();
                 document.getElementById(typingId).remove();
-                const poweredBy = data.powered_by === 'gemini' ? '<small style="opacity:0.6;font-size:0.7rem;">✨ Gemini AI</small>' : '';
+                const poweredBy = data.powered_by === 'mistral' ? '<small style="opacity:0.6;font-size:0.7rem;">✨ Krishi Drishti AI</small>' : '';
                 chatBox.innerHTML += `
                     <div style="margin-bottom: 1rem; text-align: left;">
                         <div style="display: inline-block; background: var(--persian-green-bg); color: var(--dark); padding: 0.75rem 1rem; border-radius: 12px; max-width: 85%; font-size: 0.9rem;">

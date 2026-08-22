@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <!-- Website Management -->
+    <div class="glass-panel">
+        <h3 style="color: var(--persian-green); margin-bottom: 1.5rem;"><i class="fa fa-globe"></i> Website Management</h3>
+        <form>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--dark);">Default Language</label>
+                <select class="form-control" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--gray-light); outline: none;">
+                    <option>English</option>
+                    <option>Hindi (हिंदी)</option>
+                    <option>Punjabi (ਪੰਜਾਬੀ)</option>
+                    <option>Marathi (मराठी)</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--dark);">Website Theme</label>
+                <select class="form-control" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--gray-light); outline: none;">
+                    <option>Light Mode (Default)</option>
+                    <option>Dark Mode (Eco)</option>
+                    <option>System Default</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem; background: var(--off-white); padding: 1rem; border-radius: 8px;">
+                <label style="display: flex; align-items: center; justify-content: space-between; font-weight: 600; color: var(--dark); cursor: pointer;">
+                    <span><i class="fa fa-bell" style="color: var(--persian-green);"></i> Enable Desktop Notifications</span>
+                    <input type="checkbox" checked style="width: 1.2rem; height: 1.2rem; cursor: pointer;">
+                </label>
+                <p style="font-size: 0.85rem; color: var(--gray); margin: 0.5rem 0 0 1.8rem;">Receive real-time alerts for weather and crops.</p>
+            </div>
+            
+            <button type="button" class="btn btn-primary" style="width: 100%; font-size: 1rem; padding: 0.8rem;" onclick="showToast('Website settings saved successfully!', 'success')"><i class="fa fa-save"></i> Save Preferences</button>
+        </form>
+    </div>
+
+    <!-- Password Management -->
+    <div class="glass-panel">
+        <h3 style="color: var(--persian-green); margin-bottom: 1.5rem;"><i class="fa fa-lock"></i> Password Management</h3>
+        <form>
+            <div style="margin-bottom: 1.2rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--dark);">Current Password</label>
+                <input type="password" class="form-control" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--gray-light); outline: none;" placeholder="Enter current password">
+            </div>
+            
+            <div style="margin-bottom: 1.2rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--dark);">New Password</label>
+                <input type="password" class="form-control" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--gray-light); outline: none;" placeholder="Enter new password (min. 8 characters)">
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--dark);">Confirm New Password</label>
+                <input type="password" class="form-control" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--gray-light); outline: none;" placeholder="Re-enter new password">
+            </div>
+            
+            <button type="button" class="btn btn-primary" style="width: 100%; background: var(--warning); color: var(--dark); font-size: 1rem; padding: 0.8rem;" onclick="showToast('Password updated securely!', 'success')"><i class="fa fa-key"></i> Update Password</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

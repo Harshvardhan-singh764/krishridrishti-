@@ -1,4 +1,4 @@
-# 🌱 AgriDrishti AI - Hackathon Project
+# 🌱 Krishi Drishti - Hackathon Project
 
 A fully functional, real-time AI-powered agriculture intelligence platform.
 
@@ -14,7 +14,7 @@ A fully functional, real-time AI-powered agriculture intelligence platform.
 ### 1. Standard Python Setup (Local)
 1. Navigate to the project directory:
    ```bash
-   cd "C:\Users\pooja\OneDrive\Desktop\SIH AGRIDRISHTI\agritech_ai_platform"
+   cd "C:\Users\pooja\OneDrive\Desktop\SIH Krishi Drishti\agritech_ai_platform"
    ```
 2. Install dependencies (we recommend using a virtual environment):
    ```bash
