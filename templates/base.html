@@ -15,9 +15,14 @@
         <!-- Sidebar -->
         <nav class="sidebar">
             <div>
-                <div class="brand">
-                    <i class="fa fa-seedling" style="color: var(--persian-green); font-size: 2rem;"></i>
-                    <span>Krishi Drishti</span>
+                <div class="brand" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fa fa-seedling" style="color: var(--persian-green); font-size: 2rem;"></i>
+                        <span>Krishi Drishti</span>
+                    </div>
+                    <button class="menu-close d-md-none" onclick="toggleSidebar()" aria-label="Close Menu" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; display: none;">
+                        <i class="fa fa-times"></i>
+                    </button>
                 </div>
                 <ul class="nav-links">
                     <li><a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}" data-i18n="nav_dashboard"><i class="fa fa-tachometer-alt"></i> Dashboard</a></li>
@@ -41,7 +46,12 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="topbar">
-                <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+                <div class="topbar-left">
+                    <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle Menu">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+                </div>
                 <div class="user-info" style="display: flex; align-items: center; gap: 1rem;">
                     <div id="google_translate_element" style="display:inline-block; margin-right: 1rem;"></div>
                     <script type="text/javascript">
@@ -285,6 +295,21 @@
                 document.getElementById(typingId)?.remove();
             }
         }
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
     </script>
     {% block scripts %}{% endblock %}
 </body>
